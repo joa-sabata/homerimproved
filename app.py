@@ -3,15 +3,28 @@ import re
 
 # --- CONFIGURACIÓN DE LA PÁGINA WEB ---
 st.set_page_config(
-    page_title="Homero Mejorado - Procesador Multi-Panel",
-    page_icon="🔮",
+    page_title="Homero - Procesador Multi-Panel",
+    page_icon="⚙️",
     layout="centered"
 )
 
-# Estilo personalizado Modo Oscuro
+# Estilo personalizado Modo Oscuro y letras de salida verdes obligatorias
 st.markdown("""
     <style>
-    .stTextArea textarea { background-color: #282c34 !important; color: #61afef !important; font-family: 'Segoe UI', monospace; }
+    /* Cajas de texto generales */
+    .stTextArea textarea { 
+        background-color: #282c34 !important; 
+        color: #61afef !important; 
+        font-family: 'Segoe UI', monospace; 
+    }
+    
+    /* Forzar que la caja de salida sea SIEMPRE verde */
+    div[data-testid="stTextAreaRootElement"] + div textarea, 
+    .stTextArea [data-testid="stWidgetLabel"] + div textarea {
+        color: #2bb063 !important;
+        font-weight: bold;
+    }
+    
     .stCodeBlock code { color: #2bb063 !important; }
     
     /* Estilo Botón Procesar (Verde) */
@@ -22,36 +35,45 @@ st.markdown("""
         border-radius: 5px !important;
         padding: 0.6rem !important;
     }
-    div.stButton > button.boton-procesar:hover {
-        background-color: #2bb063 !important;
-    }
     
-    /* Estilo Botón Borrar (Rojo) */
-    div.stButton > button.boton-borrar {
-        background-color: #e06c75 !important;
-        color: white !important;
-        font-weight: bold !important;
+    /* Estilo Botón Borrar */
+    div.stButton > button {
         border-radius: 5px !important;
-        padding: 0.6rem !important;
-    }
-    div.stButton > button.boton-borrar:hover {
-        background-color: #ef596f !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔮 Homero Mejorado")
+# ================= SECCIÓN DE LOGO OFICIAL =================
+# Usamos una URL directa de la imagen para que Streamlit la dibuje de una
+url_logo_pajarito = "https://images.prod.is.bigcommerce.com/img-R4G4rX5q3OskY9kHlV_gLpInC6f2z5T7S4r3y8U9wXQ/rs:fit:1200:1200:1/g:no/aHR0cHM6Ly9mYW50YXN5Y29tcHV0ZXJzLmNvbS93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8wMS9kcmlua2luZy1iaXJkLWxvZ28ucG5n"
+
+col_logo, col_titulo = st.columns([1, 4])
+with col_logo:
+    # Se muestra el logo del pajarito de forma fija
+    st.image(url_logo_pajarito, width=100)
+with col_titulo:
+    st.title("Homero")
+    st.write("El procesador automático que hace el trabajo pesado por vos.")
+
+st.write("---")
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
 
-# Usamos el estado de Streamlit (session_state) para poder borrar el contenido textualmente
+# Manejo de estados de borrado total y persistencia de la salida
 if "texto_entrada" not in st.session_state:
     st.session_state.texto_entrada = ""
+if "texto_salida" not in st.session_state:
+    st.session_state.texto_salida = ""
 
 # ================= SECCIÓN ENTRADA =================
-# El text area ahora lee y escribe directamente desde el estado interno
-entrada = st.text_area("Pega aquí tus órdenes mezcladas:", value=st.session_state.texto_entrada, height=250, placeholder="Escribe o pega las líneas aquí...", key="entrada_area")
+entrada = st.text_area(
+    "Pega aquí tus órdenes mezcladas:", 
+    value=st.session_state.texto_entrada, 
+    height=250, 
+    placeholder="Escribe o pega las líneas aquí...",
+    key="caja_de_entrada"
+)
 
-# Creamos dos columnas para poner los botones uno al lado del otro
+# Columnas de botones
 col1, col2 = st.columns(2)
 
 with col1:
@@ -59,14 +81,17 @@ with col1:
 with col2:
     btn_borrar = st.button("❌ BORRAR TODO", use_container_width=True)
 
-# Lógica del botón borrar
+# LÓGICA DEL BOTÓN BORRAR TOTAL
 if btn_borrar:
     st.session_state.texto_entrada = ""
-    st.rerun()  # Reinicia la página al instante para mostrar la caja vacía
+    st.session_state.texto_salida = ""
+    st.session_state.caja_de_entrada = ""
+    if "caja_de_salida" in st.session_state:
+        st.session_state.caja_de_salida = ""
+    st.rerun()
 
-# ================= BOTÓN PROCESAR =================
+# ================= LÓGICA DE PROCESAMIENTO =================
 if btn_procesar:
-    # Guardamos lo que el usuario escribió para que no se borre al procesar
     st.session_state.texto_entrada = entrada
     
     if entrada.strip():
@@ -112,29 +137,21 @@ if btn_procesar:
             es_post = "post" in linea_low
             
             # ================= DETERMINAR EL PANEL CORRECTO =================
-            
-            # REGLA EXCEPCIÓN: Si es un post de FB (ej: "like post"), prioridad absoluta al código 1248
             if es_link_fb and es_post:
                 resultados_principal.append(f"1248|{url}|{cantidad}")
-                
-            # Si es de FB pero pide solo likes tradicionales (sin la palabra post), va con el 2450
             elif es_link_fb and es_likes:
                 resultados_principal.append(f"2450|{url}|{cantidad}")
-                
-            # LÓGICA PANEL JAP
             elif "jap" in linea_low or "repost" in linea_low or es_link_fb or (es_link_tt and es_followers):
                 if codigo_manual:
                     resultados_jap.append(f"{codigo_manual}|{url}|{cantidad}")
                 elif "repost" in linea_low:
                     resultados_jap.append(f"2257|{url}|{cantidad}")
                 elif es_link_fb:
-                    resultados_jap.append(f"20|{url}|{cantidad}")  # Views FB JAP
+                    resultados_jap.append(f"20|{url}|{cantidad}")
                 elif es_link_tt and es_followers:
-                    resultados_jap.append(f"912|{url}|{cantidad}") # TikTok Followers JAP
+                    resultados_jap.append(f"912|{url}|{cantidad}")
                 else:
                     resultados_error.append(f"Falta código JAP -> {linea.strip()}")
-            
-            # LÓGICA PANEL PRINCIPAL NORMAL
             else:
                 codigo = ""
                 if "empresa" in linea_low and "2788" in linea_low: codigo = "2788"
@@ -156,8 +173,7 @@ if btn_procesar:
                 if codigo: resultados_principal.append(f"{codigo}|{url}|{cantidad}")
                 else: resultados_error.append(f"Código desconocido -> {linea.strip()}")
        
-        # ================= SECCIÓN SALIDA =================
-        st.subheader("Resultados separados por Panel:")
+        # Formatear el texto final
         texto_final = []
         if resultados_principal:
             texto_final.append("=== PANEL PRINCIPAL ===")
@@ -171,6 +187,16 @@ if btn_procesar:
             texto_final.append("⚠️ ÓRDENES CON ERROR (REVISAR):")
             texto_final.extend(resultados_error)
             
-        st.text_area("Resultados listos (Verde):", value="\n".join(texto_final), height=300, key="salida_area")
+        st.session_state.texto_salida = "\n".join(texto_final)
     else:
         st.warning("Por favor, ingresa al menos una orden para procesar.")
+
+# ================= SECCIÓN SALIDA =================
+if st.session_state.texto_salida:
+    st.subheader("Resultados separados por Panel:")
+    st.text_area(
+        "Resultados listos:", 
+        value=st.session_state.texto_salida, 
+        height=300, 
+        key="caja_de_salida"
+    )
