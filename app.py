@@ -55,7 +55,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ================= SECCIÓN DE ENCABEZADO LIMPIO =================
-st.title("Homero")
+st.title("Homero 🍩")
 st.write("El procesador automático que hace el trabajo pesado por vos.")
 st.write("---")
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
@@ -82,7 +82,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown('<div class="col-verde">', unsafe_allow_html=True)
-    btn_procesar = st.button("PROCESAR TODO", use_container_width=True, key="btn_proc")
+    btn_procesar = st.button("✨ PROCESAR TODO", use_container_width=True, key="btn_proc")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
