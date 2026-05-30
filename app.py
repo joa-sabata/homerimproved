@@ -71,7 +71,7 @@ if "texto_salida" not in st.session_state:
 # ================= SECCIÓN ENTRADA =================
 # Generamos una key dinámica combinando el texto con nuestro contador (ej: "entrada_0", "entrada_1"...)
 entrada = st.text_area(
-    "Pega aquí tus órdenes mezcladas:", 
+    "Pega aquí tus órdenes :", 
     height=250, 
     placeholder="Escribe o pega las líneas aquí...",
     key=f"entrada_dinamica_{st.session_state.contador_reset}"
