@@ -43,66 +43,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ================= SECCIÓN DE LOGO OFICIAL (BASE64) =================
-# Convertimos la imagen de "images.png" a texto base64 para que no dependa de links externos
-logo_base64 = (
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAADgCAMAAACe6K9vAAAAeFBMVEX"
-    "///8AAADFxcWcnJz4+Pj19fXo6Ojp6en7+/vJycnz8/PV1dXg4ODd3d3s7OzPz8/b29v6+vrk5OT"
-    "m5ubv7+/w8PDX19fS0tLe3t7j4+P29vb09PTNzc3Y2Njl5eXp6enr6+vp6enl5eXm5ubp6ens7Ox"
-    "4Z3ZNAAAEbElEQVR4nO3b23KyOhQGYM6BwOIoIogKiooidfX93/CwreI4VbMDSYp61796t7MvM0"
-    "mSnywZAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOD/W6zXN8Plv8bquZre"
-    "uRPhO6fD/MaddN+pTvsbd9p9r87N77PZpI7vI/v+1X86G9wA/+RstI9fH786A76X6m7GvOunZ8G"
-    "3UtXdfYyubp++7rV79V2fVfcw4v749bWv++oee9V9zVf39BvUff16P0Z3+g2uupfRvf7R9X6D3X"
-    "N1/xrR9Wv3eorwOnOqX7vHdfdU169p6+Vb9Z7vHqu6+vU89VbdRvf8wS1Wp/v4zTidX9vXqO5+X"
-    "vX9D6/VzZzup7oP//B6qO5Pru4Oq7qfFf9F9b8y92fXPf26WJv6e676Ff/0Yq++xH1b3Xf78/fX"
-    "v3/4vVdvdjGqVfX69Xdfv+qPXtUffVrd/p5r/e9TfaunD+Lg8D0GvWrd/p7bH0z/wOXPp9Y9dfU"
-    "Hrr7n+vXve8x1Xb++v6fqv34N67rX33P7g+k6eP7V0z+w+scXw6u7P7g4OLz+9Uff4urw03XwfO"
-    "qfvvr99T3X9fM/ffX0W9wX/WfX33P9+g9evXf6A7r7g9dP/8C6H/Y/uPh3H7g++gfe1R/Rva9ff"
-    "Xw/+vj97uMfXP0e9/EPXv0Hrv6Bq++pDvd7rj7++fX/86mOf379Pee6Hn/Pua7Pq47XP//0W6ru"
-    "/lTXL8b68R9X/9F9fE78C9XHvzH8fG6v/g+v/oVv7f7C6D2wreP70buP70bvgW339Ues+wNf2/1"
-    "7XveBr+3rPrDtXr2/Z9sd/f6B9Z7tD7Xdq/fD6p94f1+Ddf/Atnv1f/z+nvb1/T3r7uL9fbfdf/""T7+7rdxej137X7/wG"
-    "6H8R6X+PrP7itvvtBfO0/GPHdB6b2B079gVPvDzSj97u6f+C6v+D+6G7f9zX9C6Z/wbTuH0T1L5"
-    "jmD5x+Xdf6C6aOf8E07u/Ydl+D/uPvv4GZun8D+3UNVPcPrO6f79gfaLuvQf8G9usbmFofOPUXz"
-    "In7M0zdv5g78z9gqu6fU9v+h6Y9/yKqfeE0/fOvsWf9gqmpX2B/79N/A7Pqf6G0/+z7mKlvYF//"
-    "A6veN7Cvv4F9/w3sU9/gvvUB/vFvX771D2T6B8Lp3066H/g/7p6m/8H8+Fm/fF8fvyP36N3v37v"
-    "vNf8P1PfX748/6X7P1u+f+hMfv7/rv1f66Zc3/T++P/H+WcZ6fOPh9W/u6vX1++v7u3p9/fX9u3"
-    "p9/enHl2+9ffneGZkZGBQUFhgbGxwdHh8gISIkJiYoKiosLjY4OTo8PT4/QEFCQ0RGR0hJSktMT"
-    "U5PUFFSU1RVVldYWVpbXF1eX1BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SF"
-    "hoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusrba3uLm6u7y9vr+wscLDxMX"
-    "Gx8jJysvMzc7P0NHS09TV1tfY2drb3N3e39DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e"
-    "7v8PHy8/T19vf4+fr7/P3+/wABR5gX3AAAAAlwSFlzAAAOxAAADsQBlbno7wAAAAd0SU1FBmYK"
-    "DhIdI2ZvvbIAAAAJdnWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEA"
-    "AEAkaAMAAAABAAAAAEA6AAQAAAABAAAAAEF6AAQAAAABAAAAAEF6AA0AAAABAAAAAABAnAAFAA"
-    "AAAQAAAGQAnQAEAAAABAAAhgAAAAAAMgAAAAEAAADIAAAAAQACoAIABAAAAAEAAACgogEABAAA"
-    "AAEAAADgAAAAAFVDoVsAAAK5SURBVHgB7Z2LbuMwDETN///R3S0K9C6bU6fIkfOAnbZAmYekpM"
-    "SWh9vtVv0f7NOfv2Pbyf649GdvXzHOf9/vH+N+fP99fK2vHevrn6bX+T9vL/p/vX/W0f/+vv3p"
-    "n6bX5//S/2zGf6+uX/qTf639D+df+/618f+w8YfHj6w/0v7oXv3I+iMfjz1qY7wP6w+vP7z+yP"
-    "vX9vF78v3N9Kfv97T+yO+ftXF8OPrXv/+b+ffoW2vj/XfXH96+fG3sb7v7T7v9Tz19Xz38D+fP"
-    "vN++ffYfe3+tfe/tf87Gf76Wv/7IOn0dHz/r/v2Z7T/6/qO/f5b2H93f0bX2X3X6n/b1M9vfv1"
-    "b/rOnf0bX+Z3T6Z9f6X9G/f2btP/v+w75/VvUf3dfPtP4b+v6O/u9vdK//vG/fP9vH76f9R6f9"
-    "e/r+mdvf0bX+G7r79/T+Z9b6W9v3z/bxa9P+Wf99/8ztP+329/T+mftvXv9NfX+tX/+Mvv7orl"
-    "7/zK7+yGf9O/paf3b91x/v/G/v/9G/P/rXf/1fP/vWf/1P+3t9/W/vXzvef+Rfv39kf7Z9/f33"
-    "H9n6v/6n6v+y/vP31f9Z/7L+Zf039f2tW782fX9NfX9N31/Tx29Xnz+798+uPn+ZPn+mPn+mPp"
-    "9p/Uf3+bNp/9ntv7fXv9bHz67v7+mPP2/X929b3z9L+6+6/rPbf3btX7vvX9b6I++fdfvX7vun"
-    "tf616/un1f6zrv/atX/W9Z+1f9b9M7f/7P6Z9b0++vs7ur9fPv7O7r82fb/M7u/X++9o/5W9f2"
-    "Yfv9btPzP9M9PfX9PX989MfX/rfpnp769pf63bX2b6Z9pfa/pXpL+/pv21XF8/86+P/I7+9YfZ"
-    "vv/s64+wPn9m+vxZ7uun9vXTx9/Zff20fX+Z7evL9vFntq+f9b5+Wre/Zvv6WbZ/pvsL0veP3b"
-    "ePzN7es/v+Nfv+MdvX93Rf3+O//gL7P/6T/0p+pfxK/gX5lewr9BfIr9Bf6L9Cf2H8Cv0F7yv0"
-    "F8yv8F4Iv7J/wX9l/MLfCr/Ct8Kv4K0wK3wL3ArfwregK3wLvsKzgCvoCrsCrrAr6AqtAq9gK9"
-    "gKs4KtMCtYC7XCvECv0CvsCreCreCucCtwK8EKYAXBCOAIsIAfABvYwAb2gA3vAhvcIDawgX0g"
-    "AzvAxg4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOD38"
-    "Q83iK94NOf66wAAAABJRU5ErkJggg=="
-)
-
-col_logo, col_titulo = st.columns([1, 4])
-with col_logo:
-    # Mostramos la imagen incrustada de forma ultra segura
-    st.image(logo_base64, width=90)
-with col_titulo:
-    st.title("Homero")
-    st.write("El procesador automático que hace el trabajo pesado por vos.")
-
+# ================= SECCIÓN DE ENCABEZADO LIMPIO =================
+st.title("Homero")
+st.write("El procesador automático que hace el trabajo pesado por vos.")
 st.write("---")
+  
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
 
 # Manejo de estados de borrado total y persistencia de la salida
@@ -113,7 +58,7 @@ if "texto_salida" not in st.session_state:
 
 # ================= SECCIÓN ENTRADA =================
 entrada = st.text_area(
-    "Pega aquí tus órdenes mezcladas:", 
+    "Pega aquí tus órdenes :", 
     value=st.session_state.texto_entrada, 
     height=250, 
     placeholder="Escribe o pega las líneas aquí...",
