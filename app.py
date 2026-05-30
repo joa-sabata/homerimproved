@@ -4,7 +4,7 @@ import re
 # --- CONFIGURACIÓN DE LA PÁGINA WEB ---
 st.set_page_config(
     page_title="Homero - Procesador Multi-Panel",
-    page_icon="⚙️",
+    page_icon="🍩",
     layout="centered"
 )
 
