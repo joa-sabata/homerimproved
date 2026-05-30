@@ -47,7 +47,6 @@ st.markdown("""
 st.title("Homero")
 st.write("El procesador automático que hace el trabajo pesado por vos.")
 st.write("---")
-  
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
 
 # Manejo de estados de borrado total y persistencia de la salida
@@ -58,7 +57,7 @@ if "texto_salida" not in st.session_state:
 
 # ================= SECCIÓN ENTRADA =================
 entrada = st.text_area(
-    "Pega aquí tus órdenes :", 
+    "Pega aquí tus órdenes mezcladas:", 
     value=st.session_state.texto_entrada, 
     height=250, 
     placeholder="Escribe o pega las líneas aquí...",
