@@ -50,6 +50,7 @@ st.markdown("""
     }
     div.col-rojo button:hover {
         background-color: #ef596f !important;
+        color: white !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -88,17 +89,13 @@ with col2:
     btn_borrar = st.button("❌ BORRAR TODO", use_container_width=True, key="btn_borr")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# LÓGICA DEL BOTÓN BORRAR TOTAL
+# LÓGICA DEL BOTÓN BORRAR TOTAL (CORREGIDA SIN TOCAR KEY DIRECTO)
 if btn_borrar:
     st.session_state.texto_entrada = ""
     st.session_state.texto_salida = ""
-    st.session_state.caja_de_entrada = ""
-    if "caja_de_salida" in st.session_state:
-        st.session_state.caja_de_salida = ""
-    st.rerun()
+    st.rerun()  # Al reiniciar con la variable vacía, limpia las cajas de forma segura
 
 # ================= LÓGICA DE PROCESAMIENTO =================
-# CORRECCIÓN CLAVE: Solo actúa si el usuario presionó el botón verde deliberadamente
 if btn_procesar:
     st.session_state.texto_entrada = entrada
     
