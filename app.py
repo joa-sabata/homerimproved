@@ -36,26 +36,22 @@ st.markdown("""
         padding: 0.6rem !important;
     }
     
-    /* Estilo Botón Borrar */
+    /* Estilo Botón Borrar (Rojo) */
     div.stButton > button {
         border-radius: 5px !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# ================= SECCIÓN DE LOGO OFICIAL =================
-# Usamos una URL directa de la imagen para que Streamlit la dibuje de una
-url_logo_pajarito = "https://images.prod.is.bigcommerce.com/img-R4G4rX5q3OskY9kHlV_gLpInC6f2z5T7S4r3y8U9wXQ/rs:fit:1200:1200:1/g:no/aHR0cHM6Ly9mYW50YXN5Y29tcHV0ZXJzLmNvbS93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8wMS9kcmlua2luZy1iaXJkLWxvZ28ucG5n"
+# ================= SECCIÓN DE LOGO E IMAGEN =================
+st.title("⚙️ Homero")
 
-col_logo, col_titulo = st.columns([1, 4])
-with col_logo:
-    # Se muestra el logo del pajarito de forma fija
-    st.image(url_logo_pajarito, width=100)
-with col_titulo:
-    st.title("Homero")
-    st.write("El procesador automático que hace el trabajo pesado por vos.")
+# Subidor de archivos para que pongas la imagen que quieras de logo
+imagen_logo = st.file_uploader("📂 Carga una imagen para el logo de Homero (Opcional):", type=["png", "jpg", "jpeg", "webp"])
+if imagen_logo is not None:
+    st.image(imagen_logo, width=150)
+    st.write("---")
 
-st.write("---")
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
 
 # Manejo de estados de borrado total y persistencia de la salida
@@ -81,7 +77,7 @@ with col1:
 with col2:
     btn_borrar = st.button("❌ BORRAR TODO", use_container_width=True)
 
-# LÓGICA DEL BOTÓN BORRAR TOTAL
+# LÓGICA DEL BOTÓN BORRAR TOTAL (Limpia entrada, salida y variables internas)
 if btn_borrar:
     st.session_state.texto_entrada = ""
     st.session_state.texto_salida = ""
