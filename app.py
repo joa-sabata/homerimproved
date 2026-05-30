@@ -8,7 +8,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# Estilo personalizado Modo Oscuro y COLORES FIJOS DE BOTONES INDEPENDIENTES
+# Estilo personalizado Modo Oscuro y colores fijos de botones
 st.markdown("""
     <style>
     /* Cajas de texto generales */
@@ -27,7 +27,6 @@ st.markdown("""
     
     .stCodeBlock code { color: #2bb063 !important; }
     
-    /* === ESTILOS EXCLUSIVOS PARA LOS BOTONES CON CLASES PROPIAS === */
     /* Botón Procesar Todo (Verde) */
     div.col-verde button {
         background-color: #239a54 !important;
@@ -35,14 +34,9 @@ st.markdown("""
         font-weight: bold !important;
         border: none !important;
         border-radius: 5px !important;
-        transition: background-color 0.3s !important;
     }
     div.col-verde button:hover {
         background-color: #2bb063 !important;
-        color: white !important;
-    }
-    div.col-verde button:active {
-        background-color: #1e7e43 !important;
         color: white !important;
     }
 
@@ -53,15 +47,9 @@ st.markdown("""
         font-weight: bold !important;
         border: none !important;
         border-radius: 5px !important;
-        transition: background-color 0.3s !important;
     }
     div.col-rojo button:hover {
         background-color: #ef596f !important;
-        color: white !important;
-    }
-    div.col-rojo button:active {
-        background-color: #c7525a !important;
-        color: white !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -90,7 +78,6 @@ entrada = st.text_area(
 # Columnas de botones
 col1, col2 = st.columns(2)
 
-# Colocamos cada botón dentro de un contenedor HTML con su respectiva clase de color
 with col1:
     st.markdown('<div class="col-verde">', unsafe_allow_html=True)
     btn_procesar = st.button("PROCESAR TODO", use_container_width=True, key="btn_proc")
@@ -111,6 +98,7 @@ if btn_borrar:
     st.rerun()
 
 # ================= LÓGICA DE PROCESAMIENTO =================
+# CORRECCIÓN CLAVE: Solo actúa si el usuario presionó el botón verde deliberadamente
 if btn_procesar:
     st.session_state.texto_entrada = entrada
     
