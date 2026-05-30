@@ -8,7 +8,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# Estilo personalizado Modo Oscuro y letras de salida verdes obligatorias
+# Estilo personalizado Modo Oscuro y COLORES FIJOS DE BOTONES INDEPENDIENTES
 st.markdown("""
     <style>
     /* Cajas de texto generales */
@@ -27,18 +27,41 @@ st.markdown("""
     
     .stCodeBlock code { color: #2bb063 !important; }
     
-    /* Estilo Botón Procesar (Verde) */
-    div.stButton > button.boton-procesar {
+    /* === ESTILOS EXCLUSIVOS PARA LOS BOTONES CON CLASES PROPIAS === */
+    /* Botón Procesar Todo (Verde) */
+    div.col-verde button {
         background-color: #239a54 !important;
         color: white !important;
         font-weight: bold !important;
+        border: none !important;
         border-radius: 5px !important;
-        padding: 0.6rem !important;
+        transition: background-color 0.3s !important;
     }
-    
-    /* Estilo Botón Borrar */
-    div.stButton > button {
+    div.col-verde button:hover {
+        background-color: #2bb063 !important;
+        color: white !important;
+    }
+    div.col-verde button:active {
+        background-color: #1e7e43 !important;
+        color: white !important;
+    }
+
+    /* Botón Borrar Todo (Rojo) */
+    div.col-rojo button {
+        background-color: #e06c75 !important;
+        color: white !important;
+        font-weight: bold !important;
+        border: none !important;
         border-radius: 5px !important;
+        transition: background-color 0.3s !important;
+    }
+    div.col-rojo button:hover {
+        background-color: #ef596f !important;
+        color: white !important;
+    }
+    div.col-rojo button:active {
+        background-color: #c7525a !important;
+        color: white !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -67,10 +90,16 @@ entrada = st.text_area(
 # Columnas de botones
 col1, col2 = st.columns(2)
 
+# Colocamos cada botón dentro de un contenedor HTML con su respectiva clase de color
 with col1:
-    btn_procesar = st.button("PROCESAR TODO", type="primary", use_container_width=True)
+    st.markdown('<div class="col-verde">', unsafe_allow_html=True)
+    btn_procesar = st.button("PROCESAR TODO", use_container_width=True, key="btn_proc")
+    st.markdown('</div>', unsafe_allow_html=True)
+
 with col2:
-    btn_borrar = st.button("❌ BORRAR TODO", use_container_width=True)
+    st.markdown('<div class="col-rojo">', unsafe_allow_html=True)
+    btn_borrar = st.button("❌ BORRAR TODO", use_container_width=True, key="btn_borr")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # LÓGICA DEL BOTÓN BORRAR TOTAL
 if btn_borrar:
