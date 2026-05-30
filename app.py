@@ -50,7 +50,6 @@ st.markdown("""
     }
     div.col-rojo button:hover {
         background-color: #ef596f !important;
-        color: white !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -61,16 +60,17 @@ st.write("El procesador automático que hace el trabajo pesado por vos.")
 st.write("---")
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
 
-# Manejo de estados de borrado total y persistencia de la salida
-if "texto_entrada" not in st.session_state:
-    st.session_state.texto_entrada = ""
+# SOLUCIÓN AQUÍ: Inicializamos las variables de estado correctamente
+if "caja_de_entrada" not in st.session_state:
+    st.session_state.caja_de_entrada = ""
 if "texto_salida" not in st.session_state:
     st.session_state.texto_salida = ""
 
 # ================= SECCIÓN ENTRADA =================
+# Al vincular el componente directamente a st.session_state.caja_de_entrada mediante el key,
+# cualquier cambio que hagamos en el estado se reflejará inmediatamente en la pantalla.
 entrada = st.text_area(
-    "Pega aquí tus órdenes mezcladas:", 
-    value=st.session_state.texto_entrada, 
+    "Pega aquí tus órdenes :", 
     height=250, 
     placeholder="Escribe o pega las líneas aquí...",
     key="caja_de_entrada"
@@ -89,16 +89,14 @@ with col2:
     btn_borrar = st.button("❌ BORRAR TODO", use_container_width=True, key="btn_borr")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# LÓGICA DEL BOTÓN BORRAR TOTAL (CORREGIDA SIN TOCAR KEY DIRECTO)
+# LÓGICA DEL BOTÓN BORRAR TOTAL (CORREGIDA PARA QUE LIMPIE AMBAS CASILLAS)
 if btn_borrar:
-    st.session_state.texto_entrada = ""
-    st.session_state.texto_salida = ""
-    st.rerun()  # Al reiniciar con la variable vacía, limpia las cajas de forma segura
+    st.session_state.caja_de_entrada = ""  # Esto vacía la casilla de origen automáticamente
+    st.session_state.texto_salida = ""     # Esto vacía los resultados de salida
+    st.rerun()
 
 # ================= LÓGICA DE PROCESAMIENTO =================
 if btn_procesar:
-    st.session_state.texto_entrada = entrada
-    
     if entrada.strip():
         lineas = entrada.strip().split('\n')
         resultados_principal, resultados_jap, resultados_error = [], [], []
@@ -193,6 +191,7 @@ if btn_procesar:
             texto_final.extend(resultados_error)
             
         st.session_state.texto_salida = "\n".join(texto_final)
+        st.rerun()  # Forzamos refresco para mostrar el resultado procesado
     else:
         st.warning("Por favor, ingresa al menos una orden para procesar.")
 
