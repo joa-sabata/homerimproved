@@ -13,19 +13,62 @@ st.markdown("""
     <style>
     .stTextArea textarea { background-color: #282c34 !important; color: #61afef !important; font-family: 'Segoe UI', monospace; }
     .stCodeBlock code { color: #2bb063 !important; }
-    div.stButton > button:first-child { background-color: #239a54; color: white; font-weight: bold; width: 100%; border-radius: 5px; padding: 0.6rem; }
-    div.stButton > button:first-child:hover { background-color: #2bb063; color: white; }
+    
+    /* Estilo Botón Procesar (Verde) */
+    div.stButton > button.boton-procesar {
+        background-color: #239a54 !important;
+        color: white !important;
+        font-weight: bold !important;
+        border-radius: 5px !important;
+        padding: 0.6rem !important;
+    }
+    div.stButton > button.boton-procesar:hover {
+        background-color: #2bb063 !important;
+    }
+    
+    /* Estilo Botón Borrar (Rojo) */
+    div.stButton > button.boton-borrar {
+        background-color: #e06c75 !important;
+        color: white !important;
+        font-weight: bold !important;
+        border-radius: 5px !important;
+        padding: 0.6rem !important;
+    }
+    div.stButton > button.boton-borrar:hover {
+        background-color: #ef596f !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
 st.title("🔮 Homero Mejorado")
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
 
+# Usamos el estado de Streamlit (session_state) para poder borrar el contenido textualmente
+if "texto_entrada" not in st.session_state:
+    st.session_state.texto_entrada = ""
+
 # ================= SECCIÓN ENTRADA =================
-entrada = st.text_area("Pega aquí tus órdenes mezcladas:", height=250, placeholder="Escribe o pega las líneas aquí...")
+# El text area ahora lee y escribe directamente desde el estado interno
+entrada = st.text_area("Pega aquí tus órdenes mezcladas:", value=st.session_state.texto_entrada, height=250, placeholder="Escribe o pega las líneas aquí...", key="entrada_area")
+
+# Creamos dos columnas para poner los botones uno al lado del otro
+col1, col2 = st.columns(2)
+
+with col1:
+    btn_procesar = st.button("PROCESAR TODO", type="primary", use_container_width=True)
+with col2:
+    btn_borrar = st.button("❌ BORRAR TODO", use_container_width=True)
+
+# Lógica del botón borrar
+if btn_borrar:
+    st.session_state.texto_entrada = ""
+    st.rerun()  # Reinicia la página al instante para mostrar la caja vacía
 
 # ================= BOTÓN PROCESAR =================
-if st.button("PROCESAR TODO"):
+if btn_procesar:
+    # Guardamos lo que el usuario escribió para que no se borre al procesar
+    st.session_state.texto_entrada = entrada
+    
     if entrada.strip():
         lineas = entrada.strip().split('\n')
         resultados_principal, resultados_jap, resultados_error = [], [], []
@@ -128,6 +171,6 @@ if st.button("PROCESAR TODO"):
             texto_final.append("⚠️ ÓRDENES CON ERROR (REVISAR):")
             texto_final.extend(resultados_error)
             
-        st.text_area("Resultados listos (Verde):", value="\n".join(texto_final), height=300)
+        st.text_area("Resultados listos (Verde):", value="\n".join(texto_final), height=300, key="salida_area")
     else:
         st.warning("Por favor, ingresa al menos una orden para procesar.")
