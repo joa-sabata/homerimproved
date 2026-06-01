@@ -299,7 +299,7 @@ if btn_procesar:
 if st.session_state.texto_salida:
     st.subheader("Resultados separados por Panel:")
     st.text_area(
-        "Resultados listos (Verde):", 
+        "Resultados listos :", 
         value=st.session_state.texto_salida, 
         height=300, 
         key="caja_de_salida"
