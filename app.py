@@ -4,7 +4,7 @@ import re
 # --- CONFIGURACIÓN DE LA PÁGINA WEB ---
 st.set_page_config(
     page_title="Homero - Procesador Multi-Panel",
-    page_icon="🍩",
+    page_icon="⚙️",
     layout="centered"
 )
 
@@ -55,23 +55,20 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ================= SECCIÓN DE ENCABEZADO LIMPIO =================
-st.title("Homero 🍩")
+st.title("Homero")
 st.write("El procesador automático que hace el trabajo pesado por vos.")
 st.write("---")
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
 
-# TRUCO DE RESETEO AUTOMÁTICO:
-# Usamos un "contador de reseteo" en el estado de la sesión. 
-# Cada vez que cambia, la caja recibe una clave nueva y se vacía por completo.
+# Inicializamos las variables de estado correctamente
 if "contador_reset" not in st.session_state:
     st.session_state.contador_reset = 0
 if "texto_salida" not in st.session_state:
     st.session_state.texto_salida = ""
 
 # ================= SECCIÓN ENTRADA =================
-# Generamos una key dinámica combinando el texto con nuestro contador (ej: "entrada_0", "entrada_1"...)
 entrada = st.text_area(
-    "Pega aquí tus órdenes :", 
+    "Pega aquí tus órdenes mezcladas:", 
     height=250, 
     placeholder="Escribe o pega las líneas aquí...",
     key=f"entrada_dinamica_{st.session_state.contador_reset}"
@@ -90,10 +87,10 @@ with col2:
     btn_borrar = st.button("❌ BORRAR TODO", use_container_width=True, key="btn_borr")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# LÓGICA DEL BOTÓN BORRAR TOTAL (MÉTODO ULTRA SEGURO)
+# LÓGICA DEL BOTÓN BORRAR TOTAL
 if btn_borrar:
-    st.session_state.contador_reset += 1  # Al cambiar el número, la caja se destruye y renace vacía
-    st.session_state.texto_salida = ""     # Limpiamos la caja de salida
+    st.session_state.contador_reset += 1
+    st.session_state.texto_salida = ""
     st.rerun()
 
 # ================= LÓGICA DE PROCESAMIENTO =================
@@ -109,7 +106,7 @@ if btn_procesar:
             if len(partes) < 2: continue
             
             url, cantidad = "", ""
-            # 1. Extraer URL y Cantidad
+            # 1. Extraer URL y Cantidad de la línea actual
             for parte in partes:
                 parte_low = parte.lower()
                 if any(x in parte_low for x in ["http", "youtu.be", "tiktok.com", "instagram.com", "facebook.com", "fb.watch", "fb.com"]):
@@ -125,7 +122,7 @@ if btn_procesar:
             es_link_tt = "tiktok.com" in url_low
             es_link_yt = "youtube.com" in url_low or "youtu.be" in url_low
             
-            # 3. Buscar código manual (Limpiando la URL)
+            # CORRECCIÓN CLAVE: Buscar el código manual extrayéndolo ÚNICAMENTE de la línea limpia actual
             linea_limpia = linea.replace(url, "")
             codigo_manual = ""
             numeros_en_linea = re.findall(r'\b\d{2,}\b', linea_limpia)
@@ -134,29 +131,30 @@ if btn_procesar:
                     codigo_manual = num
                     break
             
-            # Auxiliares de palabras clave
+            # Auxiliares de palabras clave (Exclusivos de la línea actual)
             es_views = any(x in linea_low for x in ["view", "vistas", "reproducciones", "views_yt"])
             es_likes = any(x in linea_low for x in ["like", "me gusta"])
             es_followers = any(x in linea_low for x in ["follower", "seguidor", "seguidores"])
             es_post = "post" in linea_low
+            es_shares = any(x in linea_low for x in ["share", "compartir", "shares", "compartidos"])
             
             # ================= DETERMINAR EL PANEL CORRECTO =================
             if es_link_fb and es_post:
                 resultados_principal.append(f"1248|{url}|{cantidad}")
             elif es_link_fb and es_likes:
                 resultados_principal.append(f"2450|{url}|{cantidad}")
-            elif "jap" in linea_low or "repost" in linea_low or es_link_fb or (es_link_tt and es_followers):
+            # Si explícitamente dice "jap" o trae un código manual en ESTA línea, va a JAP
+            elif "jap" in linea_low or "repost" in linea_low or (es_link_tt and es_followers):
                 if codigo_manual:
                     resultados_jap.append(f"{codigo_manual}|{url}|{cantidad}")
                 elif "repost" in linea_low:
                     resultados_jap.append(f"2257|{url}|{cantidad}")
-                elif es_link_fb:
-                    resultados_jap.append(f"20|{url}|{cantidad}")
                 elif es_link_tt and es_followers:
                     resultados_jap.append(f"912|{url}|{cantidad}")
                 else:
                     resultados_error.append(f"Falta código JAP -> {linea.strip()}")
             else:
+                # Panel Principal por descarte si no se cumplen condiciones de JAP
                 codigo = ""
                 if "empresa" in linea_low and "2788" in linea_low: codigo = "2788"
                 elif "empresa" in linea_low: codigo = "2754"
@@ -171,11 +169,17 @@ if btn_procesar:
                 elif es_views: codigo = "1266"
                 elif es_likes: codigo = "2450"
                 elif "save" in linea_low or "guardado" in linea_low: codigo = "705"
-                elif "share" in linea_low or "compartir" in linea_low: codigo = "1044"
+                elif es_shares or "share" in linea_low: codigo = "1044"
                 elif "reach" in linea_low or "alcance" in linea_low: codigo = "1755"
                 
-                if codigo: resultados_principal.append(f"{codigo}|{url}|{cantidad}")
-                else: resultados_error.append(f"Código desconocido -> {linea.strip()}")
+                # Si la línea tiene un código manual numérico pero no dice JAP, lo respetamos en el principal
+                if codigo_manual and not codigo:
+                    codigo = codigo_manual
+                
+                if codigo: 
+                    resultados_principal.append(f"{codigo}|{url}|{cantidad}")
+                else: 
+                    resultados_error.append(f"Código desconocido -> {linea.strip()}")
        
         # Formatear el texto final
         texto_final = []
