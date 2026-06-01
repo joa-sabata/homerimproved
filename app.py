@@ -102,101 +102,174 @@ if btn_procesar:
         for linea in lineas:
             if not linea.strip(): continue
             linea_low = linea.lower()
+            
+            # 1. Identificar la Red Social por el Link antes de desarmar fragmentos
+            red_social = "instagram"
+            if any(x in linea_low for x in ["tiktok.com"]): red_social = "tiktok"
+            elif any(x in linea_low for x in ["facebook.com", "fb.watch", "fb.com"]): red_social = "facebook"
+            elif any(x in linea_low for x in ["youtube.com", "youtu.be"]): red_social = "youtube"
+            elif any(x in linea_low for x in ["twitter.com", "x.com"]): red_social = "twitter"
+            elif any(x in linea_low for x in ["snapchat.com"]): red_social = "snapchat"
+
             partes = linea.split()
             if len(partes) < 2: continue
             
             url, cantidad = "", ""
-            # 1. Extraer URL y Cantidad de la línea actual
+            # Extraer URL y Cantidad de esta línea
             for parte in partes:
                 parte_low = parte.lower()
-                if any(x in parte_low for x in ["http", "youtu.be", "tiktok.com", "instagram.com", "facebook.com", "fb.watch", "fb.com"]):
+                if any(x in parte_low for x in ["http", "youtu.be", "tiktok.com", "instagram.com", "facebook.com", "fb.watch", "fb.com", "x.com", "twitter.com", "snapchat.com"]):
                     url = parte
                 elif re.match(r'^\d+[\d.,]*$', parte):
                     cantidad = parte
             
             if not url or not cantidad: continue
-            url_low = url.lower()
             
-            # 2. Extraer código manual ÚNICAMENTE de esta línea aislada
+            # 2. Extraer CÓDIGO MANUAL numérico presente en el renglón (descartando la cantidad)
             linea_sin_url = linea.replace(url, "")
             todos_los_numeros = re.findall(r'\b\d{2,6}\b', linea_sin_url)
-            
             codigo_manual = ""
             for num in todos_los_numeros:
                 if num != cantidad:
                     codigo_manual = num
                     break
-            
-            # Identificar Red Social por el LINK
-            es_link_fb = "facebook.com" in url_low or "fb.watch" in url_low or "fb.com" in url_low
-            es_link_tt = "tiktok.com" in url_low
-            es_link_yt = "youtube.com" in url_low or "youtu.be" in url_low
-            
-            # Auxiliares de palabras clave
+
+            # Auxiliares de búsqueda de palabras clave
             es_views = any(x in linea_low for x in ["view", "vistas", "reproducciones", "views_yt"])
             es_likes = any(x in linea_low for x in ["like", "me gusta"])
             es_followers = any(x in linea_low for x in ["follower", "seguidor", "seguidores"])
-            es_post = "post" in linea_low
+            es_post = any(x in linea_low for x in ["post", "publicacion"])
             es_shares = any(x in linea_low for x in ["share", "compartir", "shares", "compartidos"])
+            es_repost = "repost" in linea_low
+            es_jap_keyword = "jap" in linea_low
+
+            codigo = ""
+            panel_destino = ""
+
+            # ================= MOTOR DE CLASIFICACIÓN DURA =================
             
-            # ================= DETERMINAR EL PANEL CORRECTO =================
-            # CASO 1: Si explícitamente pide "JAP", "REPOST" o Seguidores de TikTok, va a JAP
-            if "jap" in linea_low or "repost" in linea_low or (es_link_tt and es_followers):
-                if codigo_manual:
-                    resultados_jap.append(f"{codigo_manual}|{url}|{cantidad}")
-                elif "repost" in linea_low:
-                    resultados_jap.append(f"2257|{url}|{cantidad}")
-                elif es_link_tt and es_followers:
-                    resultados_jap.append(f"912|{url}|{cantidad}")
+            # --- SNAPCHAT ---
+            if red_social == "snapchat":
+                panel_destino = "jap"
+                codigo = codigo_manual if codigo_manual else "4165" # 4165 por defecto si no viene manual
+            
+            # --- TWITTER ---
+            elif red_social == "twitter":
+                panel_destino = "jap"
+                if es_likes: codigo = "8243"
+                elif es_views: codigo = "2100"
+                elif es_followers: codigo = "7666"
+                elif "retweet" in linea_low: codigo = "7155"
+                elif "guardado" in linea_low or "save" in linea_low: codigo = "1017"
+                else: codigo = codigo_manual if codigo_manual else ""
+
+            # --- YOUTUBE ---
+            elif red_social == "youtube":
+                panel_destino = "principal"
+                if es_likes: codigo = "2606"
+                elif es_views: codigo = "2603"
+
+            # --- TIKTOK ---
+            elif red_social == "tiktok":
+                if es_followers:
+                    panel_destino = "jap"
+                    codigo = "912"
+                elif es_views:
+                    panel_destino = "jap"
+                    codigo = codigo_manual if codigo_manual else "10020"
+                elif es_likes:
+                    if es_jap_keyword or codigo_manual:
+                        panel_destino = "jap"
+                        codigo = codigo_manual if codigo_manual else "7991"
+                    else:
+                        panel_destino = "principal"
+                        codigo = "1023"
+
+            # --- FACEBOOK ---
+            elif red_social == "facebook":
+                if "page" in linea_low or "pagina" in linea_low:
+                    panel_destino = "jap"
+                    codigo = "7663"
+                elif es_views:
+                    panel_destino = "jap"
+                    codigo = codigo_manual if codigo_manual else "20"
+                elif es_post:
+                    panel_destino = "principal"
+                    codigo = "1248"
+                elif es_likes:
+                    if es_jap_keyword or codigo_manual:
+                        panel_destino = "jap"
+                        codigo = codigo_manual if codigo_manual else "4350"
+                    else:
+                        panel_destino = "principal"
+                        codigo = "1248" # Like Post usa el mismo o se adapta
                 else:
-                    resultados_error.append(f"Falta código JAP -> {linea.strip()}")
-            
-            # CASO 2: Todo lo demás se distribuye inteligentemente según la red social
+                    panel_destino = "jap"
+                    codigo = "20"
+
+            # --- INSTAGRAM (Y generales) ---
+            elif red_social == "instagram":
+                # Filtros prioritarios fijos de Panel Principal
+                if "empresa" in linea_low and "2788" in linea_low:
+                    panel_destino = "principal"; codigo = "2788"
+                elif "empresa" in linea_low:
+                    panel_destino = "principal"; codigo = "2754"
+                elif "cch" in linea_low:
+                    panel_destino = "principal"; codigo = "2744"
+                elif "ccm" in linea_low:
+                    panel_destino = "principal"; codigo = "2745"
+                elif "story" in linea_low or "historia" in linea_low:
+                    panel_destino = "principal"; codigo = "700"
+                elif "reach" in linea_low or "alcance" in linea_low:
+                    panel_destino = "principal"; codigo = "1755"
+                elif "save" in linea_low or "guardado" in linea_low:
+                    panel_destino = "principal"; codigo = "705"
+                
+                # Casos mixtos (Pueden ir a Principal o JAP según la palabra clave o código)
+                elif es_repost or "repost" in linea_low:
+                    panel_destino = "jap"
+                    codigo = codigo_manual if codigo_manual else "2257"
+                elif es_shares:
+                    if es_jap_keyword or codigo_manual:
+                        panel_destino = "jap"
+                        codigo = codigo_manual if codigo_manual else "9590"
+                    else:
+                        panel_destino = "principal"; codigo = "1044"
+                elif es_views:
+                    if es_jap_keyword or codigo_manual:
+                        panel_destino = "jap"
+                        codigo = codigo_manual if codigo_manual else "6454"
+                    else:
+                        panel_destino = "principal"; codigo = "1266"
+                elif es_followers:
+                    if es_jap_keyword or codigo_manual:
+                        panel_destino = "jap"
+                        codigo = codigo_manual if codigo_manual else "2763" # Usa el manual detectado
+                    else:
+                        panel_destino = "principal"; codigo = "2763"
+                elif es_likes:
+                    if es_jap_keyword or codigo_manual:
+                        panel_destino = "jap"
+                        codigo = codigo_manual if codigo_manual else "1736" # Usa el manual o uno JAP genérico
+                    else:
+                        panel_destino = "principal"; codigo = "2450"
+
+            # Si el cliente especificó un código manual de forma directa, reescribimos el código detectado
+            if codigo_manual and not (red_social == "instagram" and panel_destino == "principal" and codigo_manual in ["2744","2745","2754","2788"]):
+                codigo = codigo_manual
+                # Si trae código manual y no se definió panel, asumimos JAP por descarte operativo
+                if not panel_destino:
+                    panel_destino = "jap"
+
+            # 3. Guardar en los contenedores correspondientes
+            if codigo and panel_destino == "principal":
+                resultados_principal.append(f"{codigo}|{url}|{cantidad}")
+            elif codigo and panel_destino == "jap":
+                resultados_jap.append(f"{codigo}|{url}|{cantidad}")
             else:
-                codigo = ""
-                
-                # Reglas específicas para FACEBOOK
-                if es_link_fb:
-                    if es_post: codigo = "1248"
-                    elif es_likes: codigo = "2450"
-                    else: codigo = "20"  # Código por defecto de FB si no especifica
-                
-                # Reglas específicas para YOUTUBE
-                elif es_link_yt:
-                    if es_views: codigo = "2603"
-                    elif es_likes: codigo = "2606"
-                
-                # Reglas específicas para TIKTOK
-                elif es_link_tt:
-                    if es_likes: codigo = "1023"
-                    elif es_views: codigo = "1266"  # Usa el mismo que el general si son views
-                
-                # Reglas Generales (Instagram y filtros comunes)
-                else:
-                    if "empresa" in linea_low and "2788" in linea_low: codigo = "2788"
-                    elif "empresa" in linea_low: codigo = "2754"
-                    elif "cch" in linea_low: codigo = "2744"
-                    elif "ccm" in linea_low: codigo = "2745"
-                    elif "story" in linea_low or "historia" in linea_low: codigo = "700"
-                    elif es_post: codigo = "1248"
-                    elif es_followers: codigo = "2763"
-                    elif es_views: codigo = "1266"
-                    elif es_likes: codigo = "2450"
-                    elif "save" in linea_low or "guardado" in linea_low: codigo = "705"
-                    elif es_shares or "share" in linea_low: codigo = "1044"
-                    elif "reach" in linea_low or "alcance" in linea_low: codigo = "1755"
-                
-                # Respetar código manual si el usuario lo ingresó de forma explícita
-                if codigo_manual and not codigo:
-                    codigo = codigo_manual
-                
-                # Guardar resultado
-                if codigo: 
-                    resultados_principal.append(f"{codigo}|{url}|{cantidad}")
-                else: 
-                    resultados_error.append(f"Código desconocido -> {linea.strip()}")
+                resultados_error.append(f"Código desconocido o incompleto -> {linea.strip()}")
        
-        # Formatear el texto final
+        # Formatear el texto final en la caja verde de salida
         texto_final = []
         if resultados_principal:
             texto_final.append("=== PANEL PRINCIPAL ===")
@@ -219,7 +292,7 @@ if btn_procesar:
 if st.session_state.texto_salida:
     st.subheader("Resultados separados por Panel:")
     st.text_area(
-        "Resultados listos:", 
+        "Resultados listos (Verde):", 
         value=st.session_state.texto_salida, 
         height=300, 
         key="caja_de_salida"
