@@ -103,7 +103,7 @@ if btn_procesar:
             if not linea.strip(): continue
             linea_low = linea.lower()
             
-            # 1. Identificar la Red Social por el Link antes de desarmar fragmentos
+            # 1. Identificar la Red Social por el Link
             red_social = "instagram"
             if "tiktok.com" in linea_low: red_social = "tiktok"
             elif any(x in linea_low for x in ["facebook.com", "fb.watch", "fb.com"]): red_social = "facebook"
@@ -115,36 +115,41 @@ if btn_procesar:
             if len(partes) < 2: continue
             
             url, cantidad = "", ""
-            # Extraer URL y Cantidad de esta línea
+            partes_texto_puro = []
+
+            # Separar la URL, la cantidad y el resto del texto de forma estricta
             for parte in partes:
                 parte_low = parte.lower()
                 if any(x in parte_low for x in ["http", "youtu.be", "tiktok.com", "instagram.com", "facebook.com", "fb.watch", "fb.com", "x.com", "twitter.com", "snapchat.com"]):
                     url = parte
                 elif re.match(r'^\d+[\d.,]*$', parte):
                     cantidad = parte
+                    partes_texto_puro.append(parte) # Mantener números para analizar posibles códigos manuales
+                else:
+                    partes_texto_puro.append(parte)
             
             if not url or not cantidad: continue
             
-            # CORRECCIÓN IMPORTANTE: Analizar texto LIMPIO (sin la URL) para no confundir letras del link con comandos
-            linea_sin_url = linea.replace(url, "")
-            linea_sin_url_low = linea_sin_url.lower()
+            # CREACIÓN DEL TEXTO LIMPIO: Excluyendo la URL por completo pieza por pieza
+            texto_limpio_linea = " ".join(partes_texto_puro)
+            texto_limpio_linea_low = texto_limpio_linea.lower()
 
-            # Extraer código manual numérico presente en el renglón (descartando la cantidad)
-            todos_los_numeros = re.findall(r'\b\d{2,6}\b', linea_sin_url)
+            # Extraer código manual numérico presente únicamente en las partes de texto (descartando la cantidad)
+            todos_los_numeros = re.findall(r'\b\d{2,6}\b', texto_limpio_linea)
             codigo_manual = ""
             for num in todos_los_numeros:
                 if num != cantidad:
                     codigo_manual = num
                     break
 
-            # Auxiliares de búsqueda de palabras clave basados en el texto limpio
-            es_views = any(x in linea_sin_url_low for x in ["view", "vistas", "reproducciones", "views_yt"])
-            es_likes = any(x in linea_sin_url_low for x in ["like", "me gusta"])
-            es_followers = any(x in linea_sin_url_low for x in ["follower", "seguidor", "seguidores"])
-            es_post = any(x in linea_sin_url_low for x in ["post", "publicacion"])
-            es_shares = any(x in linea_sin_url_low for x in ["share", "compartir", "shares", "compartidos"])
-            es_repost = "repost" in linea_sin_url_low
-            es_jap_keyword = "jap" in linea_sin_url_low
+            # Auxiliares de búsqueda de palabras clave basados en el texto que NO tiene la URL
+            es_views = any(x in texto_limpio_linea_low for x in ["view", "vistas", "reproducciones", "views_yt"])
+            es_likes = any(x in texto_limpio_linea_low for x in ["like", "me gusta"])
+            es_followers = any(x in texto_limpio_linea_low for x in ["follower", "seguidor", "seguidores"])
+            es_post = any(x in texto_limpio_linea_low for x in ["post", "publicacion"])
+            es_shares = any(x in texto_limpio_linea_low for x in ["share", "compartir", "shares", "compartidos"])
+            es_repost = "repost" in texto_limpio_linea_low
+            es_jap_keyword = "jap" in texto_limpio_linea_low
 
             codigo = ""
             panel_destino = ""
@@ -162,8 +167,8 @@ if btn_procesar:
                 if es_likes: codigo = "8243"
                 elif es_views: codigo = "2100"
                 elif es_followers: codigo = "7666"
-                elif "retweet" in linea_sin_url_low: codigo = "7155"
-                elif "guardado" in linea_sin_url_low or "save" in linea_sin_url_low: codigo = "1017"
+                elif "retweet" in texto_limpio_linea_low: codigo = "7155"
+                elif "guardado" in texto_limpio_linea_low or "save" in texto_limpio_linea_low: codigo = "1017"
                 else: codigo = codigo_manual if codigo_manual else ""
 
             # --- YOUTUBE ---
@@ -190,7 +195,7 @@ if btn_procesar:
 
             # --- FACEBOOK ---
             elif red_social == "facebook":
-                if "page" in linea_sin_url_low or "pagina" in linea_sin_url_low:
+                if "page" in texto_limpio_linea_low or "pagina" in texto_limpio_linea_low:
                     panel_destino = "jap"
                     codigo = "7663"
                 elif es_views:
@@ -213,22 +218,22 @@ if btn_procesar:
             # --- INSTAGRAM (Y generales) ---
             elif red_social == "instagram":
                 # Filtros prioritarios fijos de Panel Principal
-                if "empresa" in linea_sin_url_low and "2788" in linea_sin_url_low:
+                if "empresa" in texto_limpio_linea_low and "2788" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "2788"
-                elif "empresa" in linea_sin_url_low:
+                elif "empresa" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "2754"
-                elif "cch" in linea_sin_url_low:
+                elif "cch" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "2744"
-                elif "ccm" in linea_sin_url_low:
+                elif "ccm" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "2745"
-                elif "story" in linea_sin_url_low or "historia" in linea_sin_url_low:
+                elif "story" in texto_limpio_linea_low or "historia" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "700"
-                elif "reach" in linea_sin_url_low or "alcance" in linea_sin_url_low:
+                elif "reach" in texto_limpio_linea_low or "alcance" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "1755"
-                elif "save" in linea_sin_url_low or "guardado" in linea_sin_url_low:
+                elif "save" in texto_limpio_linea_low or "guardado" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "705"
                 
-                # Casos mixtos (Principal o JAP según texto explícito)
+                # Casos mixtos (Principal o JAP según texto explícito desvinculado de la URL)
                 elif es_repost:
                     panel_destino = "jap"
                     codigo = codigo_manual if codigo_manual else "2257"
