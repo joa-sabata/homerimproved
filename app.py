@@ -27,7 +27,7 @@ st.markdown("""
     
     .stCodeBlock code { color: #2bb063 !important; }
     
-    /* Botón Procesar Todo (Verde) */
+    /* Botón Procesar Todo */
     div.col-verde button {
         background-color: #239a54 !important;
         color: white !important;
