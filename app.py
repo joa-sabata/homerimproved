@@ -117,21 +117,22 @@ if btn_procesar:
             if not url or not cantidad: continue
             url_low = url.lower()
             
-            # 2. Identificar Red Social por el LINK
-            es_link_fb = "facebook.com" in url_low or "fb.watch" in url_low or "fb.com" in url_low
-            es_link_tt = "tiktok.com" in url_low
-            es_link_yt = "youtube.com" in url_low or "youtu.be" in url_low
+            # 2. Extraer código manual ÚNICAMENTE de esta línea aislada
+            linea_sin_url = linea.replace(url, "")
+            todos_los_numeros = re.findall(r'\b\d{2,6}\b', linea_sin_url)
             
-            # CORRECCIÓN CLAVE: Buscar el código manual extrayéndolo ÚNICAMENTE de la línea limpia actual
-            linea_limpia = linea.replace(url, "")
             codigo_manual = ""
-            numeros_en_linea = re.findall(r'\b\d{2,}\b', linea_limpia)
-            for num in numeros_en_linea:
+            for num in todos_los_numeros:
                 if num != cantidad:
                     codigo_manual = num
                     break
             
-            # Auxiliares de palabras clave (Exclusivos de la línea actual)
+            # Identificar Red Social por el LINK
+            es_link_fb = "facebook.com" in url_low or "fb.watch" in url_low or "fb.com" in url_low
+            es_link_tt = "tiktok.com" in url_low
+            es_link_yt = "youtube.com" in url_low or "youtu.be" in url_low
+            
+            # Auxiliares de palabras clave
             es_views = any(x in linea_low for x in ["view", "vistas", "reproducciones", "views_yt"])
             es_likes = any(x in linea_low for x in ["like", "me gusta"])
             es_followers = any(x in linea_low for x in ["follower", "seguidor", "seguidores"])
@@ -139,12 +140,8 @@ if btn_procesar:
             es_shares = any(x in linea_low for x in ["share", "compartir", "shares", "compartidos"])
             
             # ================= DETERMINAR EL PANEL CORRECTO =================
-            if es_link_fb and es_post:
-                resultados_principal.append(f"1248|{url}|{cantidad}")
-            elif es_link_fb and es_likes:
-                resultados_principal.append(f"2450|{url}|{cantidad}")
-            # Si explícitamente dice "jap" o trae un código manual en ESTA línea, va a JAP
-            elif "jap" in linea_low or "repost" in linea_low or (es_link_tt and es_followers):
+            # CASO 1: Si explícitamente pide "JAP", "REPOST" o Seguidores de TikTok, va a JAP
+            if "jap" in linea_low or "repost" in linea_low or (es_link_tt and es_followers):
                 if codigo_manual:
                     resultados_jap.append(f"{codigo_manual}|{url}|{cantidad}")
                 elif "repost" in linea_low:
@@ -153,29 +150,47 @@ if btn_procesar:
                     resultados_jap.append(f"912|{url}|{cantidad}")
                 else:
                     resultados_error.append(f"Falta código JAP -> {linea.strip()}")
+            
+            # CASO 2: Todo lo demás se distribuye inteligentemente según la red social
             else:
-                # Panel Principal por descarte si no se cumplen condiciones de JAP
                 codigo = ""
-                if "empresa" in linea_low and "2788" in linea_low: codigo = "2788"
-                elif "empresa" in linea_low: codigo = "2754"
-                elif "cch" in linea_low: codigo = "2744"
-                elif "ccm" in linea_low: codigo = "2745"
-                elif "story" in linea_low or "historia" in linea_low: codigo = "700"
-                elif es_link_yt and es_views: codigo = "2603"
-                elif es_link_yt and es_likes: codigo = "2606"
-                elif es_link_tt and es_likes: codigo = "1023"
-                elif es_post: codigo = "1248"
-                elif es_followers: codigo = "2763"
-                elif es_views: codigo = "1266"
-                elif es_likes: codigo = "2450"
-                elif "save" in linea_low or "guardado" in linea_low: codigo = "705"
-                elif es_shares or "share" in linea_low: codigo = "1044"
-                elif "reach" in linea_low or "alcance" in linea_low: codigo = "1755"
                 
-                # Si la línea tiene un código manual numérico pero no dice JAP, lo respetamos en el principal
+                # Reglas específicas para FACEBOOK
+                if es_link_fb:
+                    if es_post: codigo = "1248"
+                    elif es_likes: codigo = "2450"
+                    else: codigo = "20"  # Código por defecto de FB si no especifica
+                
+                # Reglas específicas para YOUTUBE
+                elif es_link_yt:
+                    if es_views: codigo = "2603"
+                    elif es_likes: codigo = "2606"
+                
+                # Reglas específicas para TIKTOK
+                elif es_link_tt:
+                    if es_likes: codigo = "1023"
+                    elif es_views: codigo = "1266"  # Usa el mismo que el general si son views
+                
+                # Reglas Generales (Instagram y filtros comunes)
+                else:
+                    if "empresa" in linea_low and "2788" in linea_low: codigo = "2788"
+                    elif "empresa" in linea_low: codigo = "2754"
+                    elif "cch" in linea_low: codigo = "2744"
+                    elif "ccm" in linea_low: codigo = "2745"
+                    elif "story" in linea_low or "historia" in linea_low: codigo = "700"
+                    elif es_post: codigo = "1248"
+                    elif es_followers: codigo = "2763"
+                    elif es_views: codigo = "1266"
+                    elif es_likes: codigo = "2450"
+                    elif "save" in linea_low or "guardado" in linea_low: codigo = "705"
+                    elif es_shares or "share" in linea_low: codigo = "1044"
+                    elif "reach" in linea_low or "alcance" in linea_low: codigo = "1755"
+                
+                # Respetar código manual si el usuario lo ingresó de forma explícita
                 if codigo_manual and not codigo:
                     codigo = codigo_manual
                 
+                # Guardar resultado
                 if codigo: 
                     resultados_principal.append(f"{codigo}|{url}|{cantidad}")
                 else: 
