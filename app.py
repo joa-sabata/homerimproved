@@ -4,7 +4,7 @@ import re
 # --- CONFIGURACIÓN DE LA PÁGINA WEB ---
 st.set_page_config(
     page_title="Homero - Procesador Multi-Panel",
-    page_icon="⚙️",
+    page_icon="🍩",
     layout="centered"
 )
 
@@ -55,7 +55,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ================= SECCIÓN DE ENCABEZADO LIMPIO =================
-st.title("Homero")
+st.title("Homero 🍩")
 st.write("El procesador automático que hace el trabajo pesado por vos.")
 st.write("---")
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
@@ -68,7 +68,7 @@ if "texto_salida" not in st.session_state:
 
 # ================= SECCIÓN ENTRADA =================
 entrada = st.text_area(
-    "Pega aquí tus órdenes mezcladas:", 
+    "Pega aquí tus órdenes :", 
     height=250, 
     placeholder="Escribe o pega las líneas aquí...",
     key=f"entrada_dinamica_{st.session_state.contador_reset}"
