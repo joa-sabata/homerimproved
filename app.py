@@ -173,7 +173,7 @@ if btn_procesar:
                         break
                 
                 # Si no se halló atrás, buscamos en todo el bloque limpio restante
-                if not quantity := cantidad:
+                if not cantidad:
                     todos_los_numeros = re.findall(r'\b\d+\b', texto_analisis_cantidad)
                     for num in todos_los_numeros:
                         if num and not (len(num) == 5 and num.startswith('3')) and not num.startswith('249'):
