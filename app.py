@@ -219,20 +219,20 @@ if btn_procesar:
                         else:
                             panel_destino = "principal"; codigo = "1023"
 
-            elif red_social == "facebook":
-                if "page" in texto_anterior or "pagina" in texto_anterior:
-                    panel_destino = "jap"; codigo = "7663"
-                elif es_views:
-                    panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "20"
-                elif es_post:
-                    panel_destino = "principal"; codigo = "1248"
-                elif es_likes:
-                    if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "4350"
-                    else:
+                elif red_social == "facebook":
+                    if "page" in texto_anterior or "pagina" in texto_anterior:
+                        panel_destino = "jap"; codigo = "7663"
+                    elif es_views:
+                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "20"
+                    elif es_post:
                         panel_destino = "principal"; codigo = "1248"
-                else:
-                    panel_destino = "jap"; codigo = "20"
+                    elif es_likes:
+                        if es_jap_keyword or codigo_manual:
+                            panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "4350"
+                        else:
+                            panel_destino = "principal"; codigo = "1248"
+                    else:
+                        panel_destino = "jap"; codigo = "20"
 
                 elif red_social == "instagram":
                     if "empresa" in texto_anterior and "2788" in texto_anterior:
@@ -258,58 +258,4 @@ if btn_procesar:
                             panel_destino = "principal"; codigo = "1044"
                     elif es_views:
                         if es_jap_keyword or codigo_manual:
-                            panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "6454"
-                        else:
-                            panel_destino = "principal"; codigo = "1266"
-                    elif es_followers:
-                        if es_jap_keyword or codigo_manual:
-                            panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "2763"
-                        else:
-                            panel_destino = "principal"; codigo = "2763"
-                    elif es_likes:
-                        if es_jap_keyword or codigo_manual:
-                            panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "1736"
-                        else:
-                            panel_destino = "principal"; codigo = "2450"
-
-                # Forzado manual a panel JAP
-                if codigo_manual and not (red_social == "instagram" and panel_destino == "principal" and codigo_manual in ["2744","2745","2754","2788"]):
-                    codigo = codigo_manual
-                    panel_destino = "jap"
-
-                # Agrupación final en listas
-                if codigo and panel_destino == "principal":
-                    resultados_principal.append(f"{codigo}|{url}|{cantidad}")
-                elif codigo and panel_destino == "jap":
-                    resultados_jap.append(f"{codigo}|{url}|{cantidad}")
-                else:
-                    resultados_error.append(f"No se pudo clasificar: {url}")
-        
-        # Formatear la salida final en pantalla
-        texto_final = []
-        if resultados_principal:
-            texto_final.append("=== PANEL PRINCIPAL ===")
-            texto_final.extend(resultados_principal)
-        if resultados_jap:
-            if resultados_principal: texto_final.append("")
-            texto_final.append("=== PANEL JAP ===")
-            texto_final.extend(resultados_jap)
-        if resultados_error:
-            if resultados_principal or resultados_jap: texto_final.append("")
-            texto_final.append("⚠️ DETALLES / ELEMENTOS NO PROCESADOS:")
-            texto_final.extend(resultados_error)
-            
-        st.session_state.texto_salida = "\n".join(texto_final)
-        st.rerun()
-    else:
-        st.warning("Por favor, ingresa al menos una orden para procesar.")
-
-# ================= SECCIÓN SALIDA =================
-if st.session_state.texto_salida:
-    st.subheader("Resultados separados por Panel:")
-    st.text_area(
-        "Resultados listos :", 
-        value=st.session_state.texto_salida, 
-        height=300, 
-        key="caja_de_salida"
-    )
+                            panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "64
