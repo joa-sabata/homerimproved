@@ -123,11 +123,20 @@ if btn_procesar:
                     resultados_error.append(f"❌ SALDO NEGATIVO (Revisar Disponible) -> {url}")
                     continue
                 
+                # === LIMPIEZA PREVENTIVA DE COSTOS MONETARIOS ===
+                # Removemos del análisis formatos de costo con $ o decimales de dinero (ej: $0.185 o 0.185 sugeridos)
+                linea_limpia_costos = re.sub(r'\$\s*\d+[\d.,]*', '', linea)
+                linea_limpia_costos = re.sub(r'\b0\.\d+\b', '', linea_limpia_costos)
+
                 # Texto anterior a la URL (para detectar producto/servicio)
-                idx_http = linea.lower().find("http")
-                texto_anterior = linea.lower()[:idx_http].strip()
+                idx_http = linea_limpia_costos.lower().find("http")
+                texto_anterior = linea_limpia_costos.lower()[:idx_http].strip()
                 if not texto_anterior:
-                    texto_anterior = " ".join(lineas[inicio_contexto:i]).lower()
+                    # Si adelante está vacío, miramos contexto previo también limpio de costos
+                    contexto_previo_limpio = " ".join(lineas[inicio_contexto:i])
+                    contexto_previo_limpio = re.sub(r'\$\s*\d+[\d.,]*', '', contexto_previo_limpio)
+                    contexto_previo_limpio = re.sub(r'\b0\.\d+\b', '', contexto_previo_limpio)
+                    texto_anterior = contexto_previo_limpio.lower()
                 
                 # --- 1. EXTRACCIÓN EXTRA-ESTRICTA DEL CÓDIGO MANUAL ---
                 codigo_manual = ""
@@ -140,21 +149,23 @@ if btn_procesar:
                             codigo_manual = num
                             break
 
-                # --- 2. EXTRACCIÓN DE CANTIDAD AILANDO EL CÓDIGO MANUAL ---
-                # Creamos un texto posterior de búsqueda y removemos la URL
+                # --- 2. EXTRACCIÓN DE CANTIDAD AISLANDO EL CÓDIGO MANUAL ---
+                # Usamos la línea y contexto limpios de decimales monetarios
                 texto_posterior = " ".join(lineas[i:fin_contexto])
+                texto_posterior = re.sub(r'\$\s*\d+[\d.,]*', '', texto_posterior)
+                texto_posterior = re.sub(r'\b0\.\d+\b', '', texto_posterior)
                 texto_posterior = texto_posterior.replace(url, "")
                 
-                # ¡Clave! Si detectamos un código manual, también lo borramos del análisis de cantidad
-                # para que no se confunda si están en la misma línea o bloque
-                texto_analisis_cantidad = contexto_texto.replace(url, "")
+                texto_analisis_cantidad = re.sub(r'\$\s*\d+[\d.,]*', '', contexto_texto)
+                texto_analisis_cantidad = re.sub(r'\b0\.\d+\b', '', texto_analisis_cantidad)
+                texto_analisis_cantidad = texto_analisis_cantidad.replace(url, "")
+                
                 if codigo_manual:
-                    # Lo removemos con un límite de palabra para no romper otros números parciales
                     texto_analisis_cantidad = re.sub(r'\b' + re.escape(codigo_manual) + r'\b', '', texto_analisis_cantidad)
                     texto_posterior = re.sub(r'\b' + re.escape(codigo_manual) + r'\b', '', texto_posterior)
 
-                # Buscamos la cantidad primero en la parte posterior (lo más natural)
-                numeros_candidatos = re.findall(r'\b\d+(?!\.\d)\b', texto_posterior)
+                # Buscamos la cantidad primero en la parte posterior (números enteros puros)
+                numeros_candidatos = re.findall(r'\b\d+\b', texto_posterior)
                 cantidad = ""
                 for num in numeros_candidatos:
                     if num and not (len(num) == 5 and num.startswith('3')) and not num.startswith('249'):
@@ -162,8 +173,8 @@ if btn_procesar:
                         break
                 
                 # Si no se halló atrás, buscamos en todo el bloque limpio restante
-                if not cantidad:
-                    todos_los_numeros = re.findall(r'\b\d+(?!\.\d)\b', texto_analisis_cantidad)
+                if not quantity := cantidad:
+                    todos_los_numeros = re.findall(r'\b\d+\b', texto_analisis_cantidad)
                     for num in todos_los_numeros:
                         if num and not (len(num) == 5 and num.startswith('3')) and not num.startswith('249'):
                             cantidad = num
