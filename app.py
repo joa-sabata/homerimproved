@@ -93,190 +93,199 @@ if btn_borrar:
     st.session_state.texto_salida = ""
     st.rerun()
 
-# ================= LÓGICA DE PROCESAMIENTO =================
+# ================= LÓGICA DE PROCESAMIENTO REESTRUCTURADA =================
 if btn_procesar:
     if entrada.strip():
-        lineas = entrada.strip().split('\n')
+        # Separamos el texto crudo en líneas limpias
+        lineas = [l.strip() for l in entrada.split('\n') if l.strip()]
         resultados_principal, resultados_jap, resultados_error = [], [], []
-       
-        for linea in lineas:
-            if not linea.strip(): continue
-            linea_low = linea.lower()
+        
+        # Patrón estricto para cazar las URLs válidas
+        patron_url = r'(https?://[^\s]+(?:youtu\.be|youtube\.com|tiktok\.com|instagram\.com|facebook\.com|fb\.watch|fb\.com|x\.com|twitter\.com|snapchat\.com)[^\s]*)'
+        
+        # Procesamos línea por línea buscando URLs (Elimina de raíz los encabezados o basura suelta)
+        for i, linea in enumerate(lineas):
+            url_match = re.search(patron_url, linea, re.IGNORECASE)
             
-            # 1. Identificar la Red Social por el Link
-            red_social = "instagram"
-            if "tiktok.com" in linea_low: red_social = "tiktok"
-            elif any(x in linea_low for x in ["facebook.com", "fb.watch", "fb.com"]): red_social = "facebook"
-            elif any(x in linea_low for x in ["youtube.com", "youtu.be"]): red_social = "youtube"
-            elif any(x in linea_low for x in ["twitter.com", "x.com"]): red_social = "twitter"
-            elif "snapchat.com" in linea_low: red_social = "snapchat"
-
-            partes = linea.split()
-            if len(partes) < 2: continue
-            
-            url, cantidad = "", ""
-            partes_texto_puro = []
-
-            # Separar la URL, la cantidad y el resto del texto de forma estricta
-            for parte in partes:
-                parte_low = parte.lower()
-                if any(x in parte_low for x in ["http", "youtu.be", "tiktok.com", "instagram.com", "facebook.com", "fb.watch", "fb.com", "x.com", "twitter.com", "snapchat.com"]):
-                    url = parte
-                elif re.match(r'^\d+[\d.,]*$', parte):
-                    cantidad = parte
-                    partes_texto_puro.append(parte) # Mantener números para analizar posibles códigos manuales
-                else:
-                    partes_texto_puro.append(parte)
-            
-            if not url or not cantidad: continue
-            
-            # CREACIÓN DEL TEXTO LIMPIO: Excluyendo la URL por completo pieza por pieza
-            texto_limpio_linea = " ".join(partes_texto_puro)
-            texto_limpio_linea_low = texto_limpio_linea.lower()
-
-            # Extraer código manual numérico presente únicamente en las partes de texto (descartando la cantidad)
-            todos_los_numeros = re.findall(r'\b\d{2,6}\b', texto_limpio_linea)
-            codigo_manual = ""
-            for num in todos_los_numeros:
-                if num != cantidad:
-                    codigo_manual = num
-                    break
-
-            # Auxiliares de búsqueda de palabras clave basados en el texto que NO tiene la URL
-            es_views = any(x in texto_limpio_linea_low for x in ["view", "vistas", "reproducciones", "views_yt"])
-            es_likes = any(x in texto_limpio_linea_low for x in ["like", "me gusta"])
-            es_followers = any(x in texto_limpio_linea_low for x in ["follower", "seguidor", "seguidores"])
-            es_post = any(x in texto_limpio_linea_low for x in ["post", "publicacion"])
-            es_shares = any(x in texto_limpio_linea_low for x in ["share", "compartir", "shares", "compartidos"])
-            es_repost = "repost" in texto_limpio_linea_low
-            es_jap_keyword = "jap" in texto_limpio_linea_low
-
-            codigo = ""
-            panel_destino = ""
-
-            # ================= MOTOR DE CLASIFICACIÓN DURA =================
-            
-            # --- SNAPCHAT ---
-            if red_social == "snapchat":
-                panel_destino = "jap"
-                codigo = codigo_manual if codigo_manual else "4165"
-            
-            # --- TWITTER ---
-            elif red_social == "twitter":
-                panel_destino = "jap"
-                if es_likes: codigo = "8243"
-                elif es_views: codigo = "2100"
-                elif es_followers: codigo = "7666"
-                elif "retweet" in texto_limpio_linea_low: codigo = "7155"
-                elif "guardado" in texto_limpio_linea_low or "save" in texto_limpio_linea_low: codigo = "1017"
-                else: codigo = codigo_manual if codigo_manual else ""
-
-            # --- YOUTUBE ---
-            elif red_social == "youtube":
-                panel_destino = "principal"
-                if es_likes: codigo = "2606"
-                elif es_views: codigo = "2603"
-
-            # --- TIKTOK ---
-            elif red_social == "tiktok":
-                if es_followers:
-                    panel_destino = "jap"
-                    codigo = "912"
-                elif es_views:
-                    panel_destino = "jap"
-                    codigo = codigo_manual if codigo_manual else "10020"
-                elif es_likes:
-                    if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"
-                        codigo = codigo_manual if codigo_manual else "7991"
-                    else:
-                        panel_destino = "principal"
-                        codigo = "1023"
-
-            # --- FACEBOOK ---
-            elif red_social == "facebook":
-                if "page" in texto_limpio_linea_low or "pagina" in texto_limpio_linea_low:
-                    panel_destino = "jap"
-                    codigo = "7663"
-                elif es_views:
-                    panel_destino = "jap"
-                    codigo = codigo_manual if codigo_manual else "20"
-                elif es_post:
-                    panel_destino = "principal"
-                    codigo = "1248"
-                elif es_likes:
-                    if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"
-                        codigo = codigo_manual if codigo_manual else "4350"
-                    else:
-                        panel_destino = "principal"
-                        codigo = "1248"
-                else:
-                    panel_destino = "jap"
-                    codigo = "20"
-
-            # --- INSTAGRAM (Y generales) ---
-            elif red_social == "instagram":
-                # Filtros prioritarios fijos de Panel Principal
-                if "empresa" in texto_limpio_linea_low and "2788" in texto_limpio_linea_low:
-                    panel_destino = "principal"; codigo = "2788"
-                elif "empresa" in texto_limpio_linea_low:
-                    panel_destino = "principal"; codigo = "2754"
-                elif "cch" in texto_limpio_linea_low:
-                    panel_destino = "principal"; codigo = "2744"
-                elif "ccm" in texto_limpio_linea_low:
-                    panel_destino = "principal"; codigo = "2745"
-                elif "story" in texto_limpio_linea_low or "historia" in texto_limpio_linea_low:
-                    panel_destino = "principal"; codigo = "700"
-                elif "reach" in texto_limpio_linea_low or "alcance" in texto_limpio_linea_low:
-                    panel_destino = "principal"; codigo = "1755"
-                elif "save" in texto_limpio_linea_low or "guardado" in texto_limpio_linea_low:
-                    panel_destino = "principal"; codigo = "705"
+            if url_match:
+                url = url_match.group(1)
+                url_low = url.lower()
                 
-                # Casos mixtos (Principal o JAP según texto explícito desvinculado de la URL)
-                elif es_repost:
+                # Contexto dinámico de la orden: analizamos entorno para evitar falsos positivos
+                inicio_contexto = max(0, i - 4)
+                fin_contexto = min(len(lineas), i + 5)
+                contexto_lineas = lineas[inicio_contexto:fin_contexto]
+                contexto_texto = " ".join(contexto_lineas)
+                contexto_texto_low = contexto_texto.lower()
+                
+                # === DETECTAR CAMPANITA DE ALERTA 🔔 ===
+                if "🔔" in contexto_texto or "bell" in contexto_texto_low:
+                    resultados_error.append(f"🔔 ORDEN CON ALERTA (Revisar en Gestor) -> {url}")
+                    continue
+                    
+                # === DETECTAR DISPONIBLE NEGATIVO ❌ ===
+                if re.search(r'-\s*\$|\$\s*-', contexto_texto):
+                    resultados_error.append(f"❌ SALDO NEGATIVO (Revisar Disponible) -> {url}")
+                    continue
+                
+                # Extraer el TEXTO del servicio (mirando la misma línea a la izquierda de la URL)
+                idx_http = linea.lower().find("http")
+                texto_anterior = linea.lower()[:idx_http].strip()
+                if not texto_anterior:
+                    # Rescate de contexto si la URL quedó sola en su renglón
+                    texto_anterior = " ".join(lineas[inicio_contexto:i]).lower()
+                
+                # Extraer la CANTIDAD analizando la parte posterior
+                texto_posterior = " ".join(lineas[i:fin_contexto])
+                texto_posterior = texto_posterior.replace(url, "")
+                
+                numeros_candidatos = re.findall(r'\b\d+(?!\.\d)\b', texto_posterior)
+                
+                cantidad = ""
+                for num in numeros_candidatos:
+                    # Ignoramos IDs de venta (5 dígitos que inician con 3) e IDs de orden (249XXXX)
+                    if num and not (len(num) == 5 and num.startswith('3')) and not num.startswith('249'):
+                        cantidad = num
+                        break
+                
+                # Rescate total de cantidad en todo el bloque si faltaba
+                if not cantidad:
+                    todos_los_numeros = re.findall(r'\b\d+(?!\.\d)\b', contexto_texto)
+                    for num in todos_los_numeros:
+                        if num and not (len(num) == 5 and num.startswith('3')) and not num.startswith('249'):
+                            cantidad = num
+                            break
+
+                if not cantidad:
+                    resultados_error.append(f"Falta cantidad para el link -> {url}")
+                    continue
+
+                # --- IDENTIFICAR RED SOCIAL ---
+                red_social = "instagram"
+                if "tiktok.com" in url_low: red_social = "tiktok"
+                elif any(x in url_low for x in ["facebook.com", "fb.watch", "fb.com"]): red_social = "facebook"
+                elif any(x in url_low for x in ["youtube.com", "youtu.be"]): red_social = "youtube"
+                elif any(x in url_low for x in ["twitter.com", "x.com"]): red_social = "twitter"
+                elif "snapchat.com" in url_low: red_social = "snapchat"
+
+                # --- PALABRAS CLAVE ---
+                es_views = any(x in texto_anterior for x in ["view", "vistas", "reproducciones", "views_yt"])
+                es_likes = any(x in texto_anterior for x in ["like", "me gusta"])
+                es_followers = any(x in texto_anterior for x in ["follower", "seguidor", "seguidores"])
+                es_post = "post" in texto_anterior
+                es_shares = any(x in texto_anterior for x in ["share", "compartir", "shares", "compartidos"])
+                es_repost = "repost" in texto_anterior
+                es_jap_keyword = "jap" in texto_anterior
+
+                # Extraer códigos manuales (ej: "9590")
+                codigo_manual = ""
+                numeros_en_producto = re.findall(r'\b\d{2,6}\b', texto_anterior)
+                if numeros_en_producto:
+                    for num in reversed(numeros_en_producto):
+                        if not (len(num) == 5 and num.startswith('3')) and not num.startswith('249'):
+                            codigo_manual = num
+                            break
+
+                codigo = ""
+                panel_destino = ""
+
+                # ================= MOTOR DE CLASIFICACIÓN HARDCODEADO =================
+                if red_social == "snapchat":
                     panel_destino = "jap"
-                    codigo = codigo_manual if codigo_manual else "2257"
-                elif es_shares:
-                    if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"
-                        codigo = codigo_manual if codigo_manual else "9590"
-                    else:
-                        panel_destino = "principal"; codigo = "1044"
+                    codigo = codigo_manual if codigo_manual else "4165"
+                
+                elif red_social == "twitter":
+                    panel_destino = "jap"
+                    if es_likes: codigo = "8243"
+                    elif es_views: codigo = "2100"
+                    elif es_followers: codigo = "7666"
+                    elif "retweet" in texto_anterior: codigo = "7155"
+                    elif "guardado" in texto_anterior or "save" in texto_anterior: codigo = "1017"
+                    else: codigo = codigo_manual if codigo_manual else ""
+
+                elif red_social == "youtube":
+                    panel_destino = "principal"
+                    if es_likes: codigo = "2606"
+                    elif es_views: codigo = "2603"
+
+                elif red_social == "tiktok":
+                    if es_followers:
+                        panel_destino = "jap"; codigo = "912"
+                    elif es_views:
+                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "10020"
+                    elif es_likes:
+                        if es_jap_keyword or codigo_manual:
+                            panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "7991"
+                        else:
+                            panel_destino = "principal"; codigo = "1023"
+
+            elif red_social == "facebook":
+                if "page" in texto_anterior or "pagina" in texto_anterior:
+                    panel_destino = "jap"; codigo = "7663"
                 elif es_views:
-                    if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"
-                        codigo = codigo_manual if codigo_manual else "6454"
-                    else:
-                        panel_destino = "principal"; codigo = "1266"
-                elif es_followers:
-                    if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"
-                        codigo = codigo_manual if codigo_manual else "2763"
-                    else:
-                        panel_destino = "principal"; codigo = "2763"
+                    panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "20"
+                elif es_post:
+                    panel_destino = "principal"; codigo = "1248"
                 elif es_likes:
                     if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"
-                        codigo = codigo_manual if codigo_manual else "1736"
+                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "4350"
                     else:
-                        panel_destino = "principal"; codigo = "2450"
+                        panel_destino = "principal"; codigo = "1248"
+                else:
+                    panel_destino = "jap"; codigo = "20"
 
-            # Si el cliente especificó un código manual de forma directa, reescribimos el código detectado
-            if codigo_manual and not (red_social == "instagram" and panel_destino == "principal" and codigo_manual in ["2744","2745","2754","2788"]):
-                codigo = codigo_manual
-                if not panel_destino:
+                elif red_social == "instagram":
+                    if "empresa" in texto_anterior and "2788" in texto_anterior:
+                        panel_destino = "principal"; codigo = "2788"
+                    elif "empresa" in texto_anterior:
+                        panel_destino = "principal"; codigo = "2754"
+                    elif "cch" in texto_anterior:
+                        panel_destino = "principal"; codigo = "2744"
+                    elif "ccm" in texto_anterior:
+                        panel_destino = "principal"; codigo = "2745"
+                    elif "story" in texto_anterior or "historia" in texto_anterior:
+                        panel_destino = "principal"; codigo = "700"
+                    elif "reach" in texto_anterior or "alcance" in texto_anterior:
+                        panel_destino = "principal"; codigo = "1755"
+                    elif "save" in texto_anterior or "guardado" in texto_anterior:
+                        panel_destino = "principal"; codigo = "705"
+                    elif es_repost:
+                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "2257"
+                    elif es_shares:
+                        if es_jap_keyword or codigo_manual:
+                            panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "9590"
+                        else:
+                            panel_destino = "principal"; codigo = "1044"
+                    elif es_views:
+                        if es_jap_keyword or codigo_manual:
+                            panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "6454"
+                        else:
+                            panel_destino = "principal"; codigo = "1266"
+                    elif es_followers:
+                        if es_jap_keyword or codigo_manual:
+                            panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "2763"
+                        else:
+                            panel_destino = "principal"; codigo = "2763"
+                    elif es_likes:
+                        if es_jap_keyword or codigo_manual:
+                            panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "1736"
+                        else:
+                            panel_destino = "principal"; codigo = "2450"
+
+                # Forzado manual a panel JAP
+                if codigo_manual and not (red_social == "instagram" and panel_destino == "principal" and codigo_manual in ["2744","2745","2754","2788"]):
+                    codigo = codigo_manual
                     panel_destino = "jap"
 
-            # 3. Guardar en los contenedores correspondientes
-            if codigo and panel_destino == "principal":
-                resultados_principal.append(f"{codigo}|{url}|{cantidad}")
-            elif codigo and panel_destino == "jap":
-                resultados_jap.append(f"{codigo}|{url}|{cantidad}")
-            else:
-                resultados_error.append(f"Código desconocido o incompleto -> {linea.strip()}")
-       
-        # Formatear el texto final
+                # Agrupación final en listas
+                if codigo and panel_destino == "principal":
+                    resultados_principal.append(f"{codigo}|{url}|{cantidad}")
+                elif codigo and panel_destino == "jap":
+                    resultados_jap.append(f"{codigo}|{url}|{cantidad}")
+                else:
+                    resultados_error.append(f"No se pudo clasificar: {url}")
+        
+        # Formatear la salida final en pantalla
         texto_final = []
         if resultados_principal:
             texto_final.append("=== PANEL PRINCIPAL ===")
@@ -287,7 +296,7 @@ if btn_procesar:
             texto_final.extend(resultados_jap)
         if resultados_error:
             if resultados_principal or resultados_jap: texto_final.append("")
-            texto_final.append("⚠️ ÓRDENES CON ERROR (REVISAR):")
+            texto_final.append("⚠️ DETALLES / ELEMENTOS NO PROCESADOS:")
             texto_final.extend(resultados_error)
             
         st.session_state.texto_salida = "\n".join(texto_final)
