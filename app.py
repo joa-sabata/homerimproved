@@ -173,7 +173,7 @@ if btn_procesar:
                 es_likes = any(x in texto_anterior for x in ["like", "me gusta"])
                 es_followers = any(x in texto_anterior for x in ["follower", "seguidor", "seguidores"])
                 es_post = "post" in texto_anterior
-                es_shares = any(x in texto_anterior for x in ["share", "compartir", "shares", "compartidos"])
+                re_shares = any(x in texto_anterior for x in ["share", "compartir", "shares", "compartidos"])
                 es_repost = "repost" in texto_anterior
                 es_jap_keyword = "jap" in texto_anterior
 
@@ -212,50 +212,4 @@ if btn_procesar:
                     if es_followers:
                         panel_destino = "jap"; codigo = "912"
                     elif es_views:
-                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "10020"
-                    elif es_likes:
-                        if es_jap_keyword or codigo_manual:
-                            panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "7991"
-                        else:
-                            panel_destino = "principal"; codigo = "1023"
-
-                elif red_social == "facebook":
-                    if "page" in texto_anterior or "pagina" in texto_anterior:
-                        panel_destino = "jap"; codigo = "7663"
-                    elif es_views:
-                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "20"
-                    elif es_post:
-                        panel_destino = "principal"; codigo = "1248"
-                    elif es_likes:
-                        if es_jap_keyword or codigo_manual:
-                            panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "4350"
-                        else:
-                            panel_destino = "principal"; codigo = "1248"
-                    else:
-                        panel_destino = "jap"; codigo = "20"
-
-                elif red_social == "instagram":
-                    if "empresa" in texto_anterior and "2788" in texto_anterior:
-                        panel_destino = "principal"; codigo = "2788"
-                    elif "empresa" in texto_anterior:
-                        panel_destino = "principal"; codigo = "2754"
-                    elif "cch" in texto_anterior:
-                        panel_destino = "principal"; codigo = "2744"
-                    elif "ccm" in texto_anterior:
-                        panel_destino = "principal"; codigo = "2745"
-                    elif "story" in texto_anterior or "historia" in texto_anterior:
-                        panel_destino = "principal"; codigo = "700"
-                    elif "reach" in texto_anterior or "alcance" in texto_anterior:
-                        panel_destino = "principal"; codigo = "1755"
-                    elif "save" in texto_anterior or "guardado" in texto_anterior:
-                        panel_destino = "principal"; codigo = "705"
-                    elif es_repost:
-                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "2257"
-                    elif es_shares:
-                        if es_jap_keyword or codigo_manual:
-                            panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "9590"
-                        else:
-                            panel_destino = "principal"; codigo = "1044"
-                    elif es_views:
-                        if es_jap_keyword or codigo_manual:
-                            panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "64
+                        panel_destino = "jap"; codigo = codigo_manual if codigo_
