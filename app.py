@@ -192,7 +192,10 @@ if btn_procesar:
                 # ================= MOTOR DE CLASIFICACIÓN HARDCODEADO =================
                 if red_social == "snapchat":
                     panel_destino = "jap"
-                    codigo = codigo_manual if codigo_manual else "4165"
+                    if codigo_manual:
+                        codigo = codigo_manual
+                    else:
+                        codigo = "4165"
                 
                 elif red_social == "twitter":
                     panel_destino = "jap"
@@ -201,7 +204,11 @@ if btn_procesar:
                     elif es_followers: codigo = "7666"
                     elif "retweet" in texto_anterior: codigo = "7155"
                     elif "guardado" in texto_anterior or "save" in texto_anterior: codigo = "1017"
-                    else: codigo = codigo_manual if codigo_manual else ""
+                    else:
+                        if codigo_manual:
+                            codigo = codigo_manual
+                        else:
+                            codigo = ""
 
                 elif red_social == "youtube":
                     panel_destino = "principal"
@@ -210,6 +217,148 @@ if btn_procesar:
 
                 elif red_social == "tiktok":
                     if es_followers:
-                        panel_destino = "jap"; codigo = "912"
+                        panel_destino = "jap"
+                        codigo = "912"
                     elif es_views:
-                        panel_destino = "jap"; codigo = codigo_manual if codigo_
+                        panel_destino = "jap"
+                        if codigo_manual:
+                            codigo = codigo_manual
+                        else:
+                            codigo = "10020"
+                    elif es_likes:
+                        if es_jap_keyword or codigo_manual:
+                            panel_destino = "jap"
+                            if codigo_manual:
+                                codigo = codigo_manual
+                            else:
+                                list_codigo = "7991"
+                        else:
+                            panel_destino = "principal"
+                            codigo = "1023"
+
+                elif red_social == "facebook":
+                    if "page" in texto_anterior or "pagina" in texto_anterior:
+                        panel_destino = "jap"
+                        codigo = "7663"
+                    elif es_views:
+                        panel_destino = "jap"
+                        if codigo_manual:
+                            codigo = codigo_manual
+                        else:
+                            codigo = "20"
+                    elif es_post:
+                        panel_destino = "principal"
+                        codigo = "1248"
+                    elif es_likes:
+                        if es_jap_keyword or codigo_manual:
+                            panel_destino = "jap"
+                            if codigo_manual:
+                                codigo = codigo_manual
+                            else:
+                                codigo = "4350"
+                        else:
+                            panel_destino = "principal"
+                            codigo = "1248"
+                    else:
+                        panel_destino = "jap"
+                        codigo = "20"
+
+                elif red_social == "instagram":
+                    if "empresa" in texto_anterior and "2788" in texto_anterior:
+                        panel_destino = "principal"; codigo = "2788"
+                    elif "empresa" in texto_anterior:
+                        panel_destino = "principal"; codigo = "2754"
+                    elif "cch" in texto_anterior:
+                        panel_destino = "principal"; codigo = "2744"
+                    elif "ccm" in texto_anterior:
+                        panel_destino = "principal"; codigo = "2745"
+                    elif "story" in texto_anterior or "historia" in texto_anterior:
+                        panel_destino = "principal"; codigo = "700"
+                    elif "reach" in texto_anterior or "alcance" in texto_anterior:
+                        panel_destino = "principal"; codigo = "1755"
+                    elif "save" in texto_anterior or "guardado" in texto_anterior:
+                        panel_destino = "principal"; codigo = "705"
+                    elif es_repost:
+                        panel_destino = "jap"
+                        if codigo_manual:
+                            codigo = codigo_manual
+                        else:
+                            codigo = "2257"
+                    elif re_shares:
+                        if es_jap_keyword or codigo_manual:
+                            panel_destino = "jap"
+                            if codigo_manual:
+                                codigo = codigo_manual
+                            else:
+                                codigo = "9590"
+                        else:
+                            panel_destino = "principal"; codigo = "1044"
+                    elif es_views:
+                        if es_jap_keyword or codigo_manual:
+                            panel_destino = "jap"
+                            if codigo_manual:
+                                codigo = codigo_manual
+                            else:
+                                codigo = "6454"
+                        else:
+                            panel_destino = "principal"; codigo = "1266"
+                    elif es_followers:
+                        if es_jap_keyword or codigo_manual:
+                            panel_destino = "jap"
+                            if codigo_manual:
+                                codigo = codigo_manual
+                            else:
+                                codigo = "2763"
+                        else:
+                            panel_destino = "principal"; codigo = "2763"
+                    elif es_likes:
+                        if es_jap_keyword or codigo_manual:
+                            panel_destino = "jap"
+                            if codigo_manual:
+                                codigo = codigo_manual
+                            else:
+                                codigo = "1736"
+                        else:
+                            panel_destino = "principal"; codigo = "2450"
+
+                # Forzado manual a panel JAP
+                if codigo_manual and not (red_social == "instagram" and panel_destino == "principal" and codigo_manual in ["2744","2745","2754","2788"]):
+                    codigo = codigo_manual
+                    panel_destino = "jap"
+
+                # Agrupación final en listas
+                if codigo and panel_destino == "principal":
+                    resultados_principal.append(f"{codigo}|{url}|{cantidad}")
+                elif codigo and panel_destino == "jap":
+                    resultados_jap.append(f"{codigo}|{url}|{cantidad}")
+                else:
+                    resultados_error.append(f"No se pudo clasificar: {url}")
+        
+        # Formatear la salida final en pantalla
+        texto_final = []
+        if resultados_principal:
+            texto_final.append("=== PANEL PRINCIPAL ===")
+            texto_final.extend(resultados_principal)
+        if resultados_jap:
+            if resultados_principal: texto_final.append("")
+            texto_final.append("=== PANEL JAP ===")
+            texto_final.extend(resultados_jap)
+        if resultados_error:
+            if resultados_principal or resultados_jap: texto_final.append("")
+            texto_final.append("⚠️ DETALLES / ELEMENTOS NO PROCESADOS:")
+            texto_final.extend(resultados_error)
+            
+        st.session_state.texto_salida = "\n".join(texto_final)
+        st.rerun()
+    else:
+        st.warning("Por favor, ingresa al menos una orden para procesar.")
+
+# ================= SECCIÓN SALIDA =================
+if st.session_state.texto_salida:
+    st.subheader("Resultados separados por Panel:")
+    st.text_area(
+        "Resultados listos :", 
+        value=st.session_state.texto_salida, 
+        height=300, 
+        key="caja_de_salida"
+    )
