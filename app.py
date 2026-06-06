@@ -3,7 +3,7 @@ import re
 
 # --- CONFIGURACIÓN DE LA PÁGINA WEB ---
 st.set_page_config(
-    page_title="Homero - Procesador Multi-Panel",
+    page_title="Homero 2 - Procesador Multi-Panel",
     page_icon="🍩",
     layout="centered"
 )
@@ -281,3 +281,26 @@ if btn_procesar:
         if resultados_principal:
             texto_final.append("=== PANEL PRINCIPAL ===")
             texto_final.extend(resultados_principal)
+        if resultados_jap:
+            if resultados_principal: texto_final.append("")
+            texto_final.append("=== PANEL JAP ===")
+            texto_final.extend(resultados_jap)
+        if resultados_error:
+            if resultados_principal or resultados_jap: texto_final.append("")
+            texto_final.append("⚠️ ÓRDENES CON ERROR (REVISAR):")
+            texto_final.extend(resultados_error)
+            
+        st.session_state.texto_salida = "\n".join(texto_final)
+        st.rerun()
+    else:
+        st.warning("Por favor, ingresa al menos una orden para procesar.")
+
+# ================= SECCIÓN SALIDA =================
+if st.session_state.texto_salida:
+    st.subheader("Resultados separados por Panel:")
+    st.text_area(
+        "Resultados listos :", 
+        value=st.session_state.texto_salida, 
+        height=300, 
+        key="caja_de_salida"
+    )
