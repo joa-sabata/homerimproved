@@ -280,4 +280,4 @@ if btn_procesar:
         texto_final = []
         if resultados_principal:
             texto_final.append("=== PANEL PRINCIPAL ===")
-            texto_final.extend(resultados_principal
+            texto_final.extend(resultados_principal)
