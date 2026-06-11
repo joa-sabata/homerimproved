@@ -3,7 +3,7 @@ import re
 
 # --- CONFIGURACIÓN DE LA PÁGINA WEB ---
 st.set_page_config(
-    page_title="Homero  - Procesador Multi-Panel",
+    page_title="Homero 2 - Procesador Multi-Panel",
     page_icon="🍩",
     layout="centered"
 )
@@ -55,7 +55,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ================= SECCIÓN DE ENCABEZADO LIMPIO =================
-st.title("Homero 🍩")
+st.title("Homero 2 🍩")
 st.write("El procesador automático que hace el trabajo pesado por vos.")
 st.write("---")
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
@@ -115,32 +115,42 @@ if btn_procesar:
             if len(partes) < 2: continue
             
             url, cantidad = "", ""
-            partes_texto_puro = []
-
-            # Separar la URL, la cantidad y el resto del texto de forma estricta
+            # Buscamos la URL y la cantidad (asumiendo que la cantidad suele ser el último elemento numérico)
             for parte in partes:
                 parte_low = parte.lower()
                 if any(x in parte_low for x in ["http", "youtu.be", "tiktok.com", "instagram.com", "facebook.com", "fb.watch", "fb.com", "x.com", "twitter.com", "snapchat.com"]):
                     url = parte
-                elif re.match(r'^\d+[\d.,]*$', parte):
-                    cantidad = parte
-                    partes_texto_puro.append(parte) # Mantener números para analizar posibles códigos manuales
-                else:
-                    partes_texto_puro.append(parte)
             
+            if partes[-1].isdigit():
+                cantidad = partes[-1]
+            else:
+                # Fallback por si la cantidad no está al final de todo
+                for parte in reversed(partes):
+                    if parte.isdigit():
+                        cantidad = parte
+                        break
+
             if not url or not cantidad: continue
             
-            # CREACIÓN DEL TEXTO LIMPIO: Excluyendo la URL por completo pieza por pieza
+            # Reconstruimos el texto puro quitando estrictamente SOLO la URL y la cantidad final
+            partes_texto_puro = []
+            ya_quito_cantidad_final = False
+            
+            for i, parte in enumerate(partes):
+                if parte == url:
+                    continue
+                # Si es el último elemento y es la cantidad, lo removemos para limpiar el texto
+                if i == len(partes) - 1 and parte == cantidad and not ya_quito_cantidad_final:
+                    ya_quito_cantidad_final = True
+                    continue
+                partes_texto_puro.append(parte)
+
             texto_limpio_linea = " ".join(partes_texto_puro)
             texto_limpio_linea_low = texto_limpio_linea.lower()
 
-            # Extraer código manual numérico presente únicamente en las partes de texto (descartando la cantidad)
+            # Extraer código manual numérico presente en lo que quedó del texto limpio
             todos_los_numeros = re.findall(r'\b\d{2,6}\b', texto_limpio_linea)
-            codigo_manual = ""
-            for num in todos_los_numeros:
-                if num != cantidad:
-                    codigo_manual = num
-                    break
+            codigo_manual = todos_los_numeros[0] if todos_los_numeros else ""
 
             # Auxiliares de búsqueda de palabras clave basados en el texto que NO tiene la URL
             es_views = any(x in texto_limpio_linea_low for x in ["view", "vistas", "reproducciones", "views_yt"])
@@ -177,7 +187,6 @@ if btn_procesar:
                 if es_likes: 
                     codigo = "2606"
                 elif es_views: 
-                    # NUEVO: Views Empresa para YouTube
                     if "empresa" in texto_limpio_linea_low:
                         codigo = "2792"
                     else:
@@ -264,12 +273,11 @@ if btn_procesar:
                 elif es_likes:
                     if es_jap_keyword or codigo_manual:
                         panel_destino = "jap"
-                        # NUEVO: Likes JAP para Instagram
                         codigo = codigo_manual if codigo_manual else "4176"
                     else:
                         panel_destino = "principal"; codigo = "2450"
 
-            # Si el cliente especificó un código manual de forma directa, reescribimos el código detectado
+            # Si escribiste un código manual explícito al inicio, se usa de forma obligatoria
             if codigo_manual and not (red_social == "instagram" and panel_destino == "principal" and codigo_manual in ["2744","2745","2754","2788"]):
                 codigo = codigo_manual
                 if not panel_destino:
