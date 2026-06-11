@@ -3,7 +3,7 @@ import re
 
 # --- CONFIGURACIÓN DE LA PÁGINA WEB ---
 st.set_page_config(
-    page_title="Homero - Procesador Multi-Panel",
+    page_title="Homero  - Procesador Multi-Panel",
     page_icon="🍩",
     layout="centered"
 )
@@ -56,101 +56,6 @@ st.markdown("""
 
 # ================= SECCIÓN DE ENCABEZADO LIMPIO =================
 st.title("Homero 🍩")
-st.write("El procesador automático que hace el trabajo pesado por vos.")
-st.write("---")
-st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
-
-# Inicializamos las variables de estado correctamente
-if "contador_reset" not in st.session_state:
-    st.session_state.contador_reset = 0
-if "texto_salida" not in st.session_state:
-    st.session_state.texto_salida = ""
-
-# ================= SECCIÓN ENTRADA =================
-entrada = st.text_area(
-    "Pega aquí tus órdenes :", 
-    height=250, 
-    placeholder="Escribe o pega las líneas aquí...",
-    key=f"entrada_dinamica_{st.session_state.contador_reset}"
-)
-
-# Columnas de botones
-col1, col2 = st.columns(2)
-
-with col1:
-    st.markdown('<div class="col-verde">', unsafe_allow_html=True)
-    btn_procesar = st.button("✨ PROCESAR TODO", use_container_width=True, key="btn_proc")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with col2:
-    st.markdown('<div class="col-rojo">', unsafe_allow_html=True)
-    btn_borrar = st.button("❌ BORRAR TODO", use_container_width=True, key="btn_borr")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# LÓGICA DEL BOTÓN BORRAR TOTAL (CORREGIDO PARA LIMPIAR LA MEMORIA INTERNA)
-if btn_borrar:
-    st.session_state.contador_reset += 1
-    st.session_state.texto_salida = ""  # <- CORRECCIÓN: Borra los resultados guardados anteriores
-    st.rerun()
-
-import streamlit as st
-import re
-
-# --- CONFIGURACIÓN DE LA PÁGINA WEB ---
-st.set_page_config(
-    page_title="Homero 2 - Procesador Multi-Panel",
-    page_icon="🍩",
-    layout="centered"
-)
-
-# Estilo personalizado Modo Oscuro y colores fijos de botones
-st.markdown("""
-    <style>
-    /* Cajas de texto generales */
-    .stTextArea textarea { 
-        background-color: #282c34 !important; 
-        color: #61afef !important; 
-        font-family: 'Segoe UI', monospace; 
-    }
-    
-    /* Forzar que la caja de salida sea SIEMPRE verde */
-    div[data-testid="stTextAreaRootElement"] + div textarea, 
-    .stTextArea [data-testid="stWidgetLabel"] + div textarea {
-        color: #2bb063 !important;
-        font-weight: bold;
-    }
-    
-    .stCodeBlock code { color: #2bb063 !important; }
-    
-    /* Botón Procesar Todo */
-    div.col-verde button {
-        background-color: #239a54 !important;
-        color: white !important;
-        font-weight: bold !important;
-        border: none !important;
-        border-radius: 5px !important;
-    }
-    div.col-verde button:hover {
-        background-color: #2bb063 !important;
-        color: white !important;
-    }
-
-    /* Botón Borrar Todo (Rojo) */
-    div.col-rojo button {
-        background-color: #e06c75 !important;
-        color: white !important;
-        font-weight: bold !important;
-        border: none !important;
-        border-radius: 5px !important;
-    }
-    div.col-rojo button:hover {
-        background-color: #ef596f !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# ================= SECCIÓN DE ENCABEZADO LIMPIO =================
-st.title("Homero 2 🍩")
 st.write("El procesador automático que hace el trabajo pesado por vos.")
 st.write("---")
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
