@@ -3,7 +3,7 @@ import re
 
 # --- CONFIGURACIÓN DE LA PÁGINA WEB ---
 st.set_page_config(
-    page_title="Homero 2 - Procesador Multi-Panel",
+    page_title="Homero - Procesador Multi-Panel",
     page_icon="🍩",
     layout="centered"
 )
@@ -55,7 +55,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ================= SECCIÓN DE ENCABEZADO LIMPIO =================
-st.title("Homero 2 🍩")
+st.title("Homero 🍩")
 st.write("El procesador automático que hace el trabajo pesado por vos.")
 st.write("---")
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
@@ -156,6 +156,7 @@ if btn_procesar:
             es_views = any(x in texto_limpio_linea_low for x in ["view", "vistas", "reproducciones", "views_yt"])
             es_likes = any(x in texto_limpio_linea_low for x in ["like", "me gusta"])
             es_followers = any(x in texto_limpio_linea_low for x in ["follower", "seguidor", "seguidores"])
+            es_subs = any(x in texto_limpio_linea_low for x in ["sub", "subs", "suscriptores", "subscribers"])
             es_post = any(x in texto_limpio_linea_low for x in ["post", "publicacion"])
             es_shares = any(x in texto_limpio_linea_low for x in ["share", "compartir", "shares", "compartidos"])
             es_repost = "repost" in texto_limpio_linea_low
@@ -186,6 +187,9 @@ if btn_procesar:
                 panel_destino = "principal"
                 if es_likes: 
                     codigo = "2606"
+                elif es_subs:
+                    # NUEVO: Suscriptores para YouTube
+                    codigo = "2795"
                 elif es_views: 
                     if "empresa" in texto_limpio_linea_low:
                         codigo = "2792"
