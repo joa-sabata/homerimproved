@@ -267,7 +267,7 @@ if btn_procesar:
                         panel_destino = "jap"
                         codigo = codigo_manual if codigo_manual else "6454"
                     else:
-                        panel_destino = "principal"; codigo = "1266"
+                        panel_destino = "principal"; codigo = "2777"
                 elif es_followers:
                     if es_jap_keyword or codigo_manual:
                         panel_destino = "jap"
