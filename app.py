@@ -3,7 +3,7 @@ import re
 
 # --- CONFIGURACIÓN DE LA PÁGINA WEB ---
 st.set_page_config(
-    page_title="Homero - Procesador Multi-Panel",
+    page_title="Homero 2 - Procesador Multi-Panel",
     page_icon="🍩",
     layout="centered"
 )
@@ -55,7 +55,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ================= SECCIÓN DE ENCABEZADO LIMPIO =================
-st.title("Homero 🍩")
+st.title("Homero 2 🍩")
 st.write("El procesador automático que hace el trabajo pesado por vos.")
 st.write("---")
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
@@ -146,8 +146,8 @@ if btn_procesar:
             texto_limpio_linea = " ".join(partes_texto_puro)
             texto_limpio_linea_low = texto_limpio_linea.lower()
 
-            # Extraer código manual numérico
-            todos_los_numeros = re.findall(r'\b\d{2,6}\b', texto_limpio_linea)
+            # EXTRAER CÓDIGO MANUAL MEJORADO: Detecta números aunque estén pegados a "JAP" (ej: 8062JAP o 7991JAP)
+            todos_los_numeros = re.findall(r'\b\d{2,6}\b|\d{2,6}(?=jap)', texto_limpio_linea_low)
             codigo_manual = todos_los_numeros[0] if todos_los_numeros else ""
 
             # Auxiliares de búsqueda de palabras clave
@@ -193,18 +193,14 @@ if btn_procesar:
             # --- TIKTOK ---
             elif red_social == "tiktok":
                 if es_followers:
-                    panel_destino = "jap"
-                    codigo = "912"
+                    panel_destino = "jap"; codigo = "912"
                 elif es_views:
-                    panel_destino = "jap"
-                    codigo = codigo_manual if codigo_manual else "10020"
+                    panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "10020"
                 elif es_likes:
                     if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"
-                        codigo = codigo_manual if codigo_manual else "8062"  # NUEVO: Likes JAP TikTok 8062 (antes 7991)
+                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "7991"
                     else:
-                        panel_destino = "principal"
-                        codigo = "1023"
+                        panel_destino = "principal"; codigo = "1023"
 
             # --- FACEBOOK ---
             elif red_social == "facebook":
@@ -265,10 +261,10 @@ if btn_procesar:
                     else:
                         panel_destino = "principal"; codigo = "2450"
 
-            # Prioridad absoluta al código manual tipeado (excepto marcas VIP)
+            # PRIORIDAD ABSOLUTA MANUAL GENERALIZADA (Si hay un código escrito, se respeta a rajatabla)
             if codigo_manual and not (red_social == "instagram" and panel_destino == "principal" and codigo_manual in ["2744","2745","2754","2788"]):
                 codigo = codigo_manual
-                if not panel_destino:
+                if es_jap_keyword or "jap" in linea_low:
                     panel_destino = "jap"
 
             # 3. Guardar en los contenedores correspondientes
