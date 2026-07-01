@@ -3,7 +3,7 @@ import re
 
 # --- CONFIGURACIÓN DE LA PÁGINA WEB ---
 st.set_page_config(
-    page_title="Homero 2 - Procesador Multi-Panel",
+    page_title="Homero - Procesador Multi-Panel",
     page_icon="🍩",
     layout="centered"
 )
@@ -55,7 +55,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ================= SECCIÓN DE ENCABEZADO LIMPIO =================
-st.title("Homero 2 🍩")
+st.title("Homero 🍩")
 st.write("El procesador automático que hace el trabajo pesado por vos.")
 st.write("---")
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
@@ -200,9 +200,11 @@ if btn_procesar:
                     codigo = codigo_manual if codigo_manual else "10020"
                 elif es_likes:
                     if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "7991"
+                        panel_destino = "jap"
+                        codigo = codigo_manual if codigo_manual else "8062"  # NUEVO: Likes JAP TikTok 8062 (antes 7991)
                     else:
-                        panel_destino = "principal"; codigo = "1023"
+                        panel_destino = "principal"
+                        codigo = "1023"
 
             # --- FACEBOOK ---
             elif red_social == "facebook":
@@ -222,10 +224,8 @@ if btn_procesar:
 
             # --- INSTAGRAM ---
             elif red_social == "instagram":
-                # NUEVO: Filtro Story JAP Prioritario
                 if es_story and es_jap_keyword:
                     panel_destino = "jap"; codigo = "7444"
-                # Filtros prioritarios fijos de Panel Principal
                 elif "empresa" in texto_limpio_linea_low and "2788" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "2788"
                 elif "empresa" in texto_limpio_linea_low:
