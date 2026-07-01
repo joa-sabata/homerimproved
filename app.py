@@ -3,7 +3,7 @@ import re
 
 # --- CONFIGURACIÓN DE LA PÁGINA WEB ---
 st.set_page_config(
-    page_title="Homero - Procesador Multi-Panel",
+    page_title="Homero 2 - Procesador Multi-Panel",
     page_icon="🍩",
     layout="centered"
 )
@@ -55,7 +55,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ================= SECCIÓN DE ENCABEZADO LIMPIO =================
-st.title("Homero 🍩")
+st.title("Homero 2 🍩")
 st.write("El procesador automático que hace el trabajo pesado por vos.")
 st.write("---")
 st.write("Pegá tus órdenes acá abajo para separarlas por panel automáticamente.")
@@ -87,7 +87,7 @@ with col2:
     btn_borrar = st.button("❌ BORRAR TODO", use_container_width=True, key="btn_borr")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# LÓGICA DEL BOTÓN BORRAR TOTAL (CORREGIDO PARA LIMPIAR LA MEMORIA INTERNA)
+# LÓGICA DEL BOTÓN BORRAR TOTAL
 if btn_borrar:
     st.session_state.contador_reset += 1
     st.session_state.texto_salida = ""  
@@ -115,7 +115,7 @@ if btn_procesar:
             if len(partes) < 2: continue
             
             url, cantidad = "", ""
-            # Buscamos la URL y la cantidad (asumiendo que la cantidad suele ser el último elemento numérico)
+            # Buscamos la URL y la cantidad
             for parte in partes:
                 parte_low = parte.lower()
                 if any(x in parte_low for x in ["http", "youtu.be", "tiktok.com", "instagram.com", "facebook.com", "fb.watch", "fb.com", "x.com", "twitter.com", "snapchat.com"]):
@@ -124,7 +124,6 @@ if btn_procesar:
             if partes[-1].isdigit():
                 cantidad = partes[-1]
             else:
-                # Fallback por si la cantidad no está al final de todo
                 for parte in reversed(partes):
                     if parte.isdigit():
                         cantidad = parte
@@ -132,14 +131,13 @@ if btn_procesar:
 
             if not url or not cantidad: continue
             
-            # Reconstruimos el texto puro quitando estrictamente SOLO la URL y la cantidad final
+            # Reconstruimos el texto puro quitando la URL y la cantidad final
             partes_texto_puro = []
             ya_quito_cantidad_final = False
             
             for i, parte in enumerate(partes):
                 if parte == url:
                     continue
-                # Si es el último elemento y es la cantidad, lo removemos para limpiar el texto
                 if i == len(partes) - 1 and parte == cantidad and not ya_quito_cantidad_final:
                     ya_quito_cantidad_final = True
                     continue
@@ -148,11 +146,11 @@ if btn_procesar:
             texto_limpio_linea = " ".join(partes_texto_puro)
             texto_limpio_linea_low = texto_limpio_linea.lower()
 
-            # Extraer código manual numérico presente en lo que quedó del texto limpio
+            # Extraer código manual numérico
             todos_los_numeros = re.findall(r'\b\d{2,6}\b', texto_limpio_linea)
             codigo_manual = todos_los_numeros[0] if todos_los_numeros else ""
 
-            # Auxiliares de búsqueda de palabras clave basados en el texto que NO tiene la URL
+            # Auxiliares de búsqueda de palabras clave
             es_views = any(x in texto_limpio_linea_low for x in ["view", "vistas", "reproducciones", "views_yt"])
             es_likes = any(x in texto_limpio_linea_low for x in ["like", "me gusta"])
             es_followers = any(x in texto_limpio_linea_low for x in ["follower", "seguidor", "seguidores"])
@@ -161,6 +159,7 @@ if btn_procesar:
             es_shares = any(x in texto_limpio_linea_low for x in ["share", "compartir", "shares", "compartidos"])
             es_repost = "repost" in texto_limpio_linea_low
             es_jap_keyword = "jap" in texto_limpio_linea_low
+            es_story = any(x in texto_limpio_linea_low for x in ["story", "historia"])
 
             codigo = ""
             panel_destino = ""
@@ -185,16 +184,11 @@ if btn_procesar:
             # --- YOUTUBE ---
             elif red_social == "youtube":
                 panel_destino = "principal"
-                if es_likes: 
-                    codigo = "2606"
-                elif es_subs:
-                    # NUEVO: Suscriptores para YouTube
-                    codigo = "2795"
+                if es_likes: codigo = "2606"
+                elif es_subs: codigo = "2795"
                 elif es_views: 
-                    if "empresa" in texto_limpio_linea_low:
-                        codigo = "2792"
-                    else:
-                        codigo = "2603"
+                    if "empresa" in texto_limpio_linea_low: codigo = "2792"
+                    else: codigo = "2603"
 
             # --- TIKTOK ---
             elif red_social == "tiktok":
@@ -206,38 +200,33 @@ if btn_procesar:
                     codigo = codigo_manual if codigo_manual else "10020"
                 elif es_likes:
                     if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"
-                        codigo = codigo_manual if codigo_manual else "7991"
+                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "7991"
                     else:
-                        panel_destino = "principal"
-                        codigo = "1023"
+                        panel_destino = "principal"; codigo = "1023"
 
             # --- FACEBOOK ---
             elif red_social == "facebook":
                 if "page" in texto_limpio_linea_low or "pagina" in texto_limpio_linea_low:
-                    panel_destino = "jap"
-                    codigo = "7663"
+                    panel_destino = "jap"; codigo = "7663"
                 elif es_views:
-                    panel_destino = "jap"
-                    codigo = codigo_manual if codigo_manual else "20"
+                    panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "20"
                 elif es_post:
-                    panel_destino = "principal"
-                    codigo = "1248"
+                    panel_destino = "principal"; codigo = "1248"
                 elif es_likes:
                     if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"
-                        codigo = codigo_manual if codigo_manual else "4350"
+                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "4350"
                     else:
-                        panel_destino = "principal"
-                        codigo = "1248"
+                        panel_destino = "principal"; codigo = "1248"
                 else:
-                    panel_destino = "jap"
-                    codigo = "20"
+                    panel_destino = "jap"; codigo = "20"
 
-            # --- INSTAGRAM (Y generales) ---
+            # --- INSTAGRAM ---
             elif red_social == "instagram":
+                # NUEVO: Filtro Story JAP Prioritario
+                if es_story and es_jap_keyword:
+                    panel_destino = "jap"; codigo = "7444"
                 # Filtros prioritarios fijos de Panel Principal
-                if "empresa" in texto_limpio_linea_low and "2788" in texto_limpio_linea_low:
+                elif "empresa" in texto_limpio_linea_low and "2788" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "2788"
                 elif "empresa" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "2754"
@@ -245,43 +234,38 @@ if btn_procesar:
                     panel_destino = "principal"; codigo = "2744"
                 elif "ccm" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "2745"
-                elif "story" in texto_limpio_linea_low or "historia" in texto_limpio_linea_low:
+                elif es_story:
                     panel_destino = "principal"; codigo = "700"
                 elif "reach" in texto_limpio_linea_low or "alcance" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "1755"
                 elif "save" in texto_limpio_linea_low or "guardado" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "705"
                 
-                # Casos mixtos (Principal o JAP según texto explícito desvinculado de la URL)
+                # Casos mixtos
                 elif es_repost:
-                    panel_destino = "jap"
-                    codigo = codigo_manual if codigo_manual else "2257"
+                    panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "2257"
                 elif es_shares:
                     if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"
-                        codigo = codigo_manual if codigo_manual else "9590"
+                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "9590"
                     else:
                         panel_destino = "principal"; codigo = "1044"
                 elif es_views:
                     if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"
-                        codigo = codigo_manual if codigo_manual else "6454"
+                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "6454"
                     else:
                         panel_destino = "principal"; codigo = "2777"
                 elif es_followers:
                     if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"
-                        codigo = codigo_manual if codigo_manual else "2763"
+                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "2763"
                     else:
                         panel_destino = "principal"; codigo = "2763"
                 elif es_likes:
                     if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"
-                        codigo = codigo_manual if codigo_manual else "4176"
+                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "4176"
                     else:
                         panel_destino = "principal"; codigo = "2450"
 
-            # Si escribiste un código manual explícito al inicio, se usa de forma obligatoria
+            # Prioridad absoluta al código manual tipeado (excepto marcas VIP)
             if codigo_manual and not (red_social == "instagram" and panel_destino == "principal" and codigo_manual in ["2744","2745","2754","2788"]):
                 codigo = codigo_manual
                 if not panel_destino:
