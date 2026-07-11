@@ -184,7 +184,9 @@ if btn_procesar:
             # --- YOUTUBE ---
             elif red_social == "youtube":
                 panel_destino = "principal"
-                if es_likes: codigo = "2606"
+                if es_likes:
+                    if "empresa" in texto_limpio_linea_low: codigo = "2810"  # NUEVO: YouTube Likes Empresa
+                    else: codigo = "2606"
                 elif es_subs: codigo = "2795"
                 elif es_views: 
                     if "empresa" in texto_limpio_linea_low: codigo = "2792"
