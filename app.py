@@ -185,7 +185,7 @@ if btn_procesar:
             elif red_social == "youtube":
                 panel_destino = "principal"
                 if es_likes:
-                    if "empresa" in texto_limpio_linea_low: codigo = "2810"  # NUEVO: YouTube Likes Empresa
+                    if "empresa" in texto_limpio_linea_low: codigo = "2810"
                     else: codigo = "2606"
                 elif es_subs: codigo = "2795"
                 elif es_views: 
@@ -226,6 +226,8 @@ if btn_procesar:
                     panel_destino = "jap"; codigo = "7444"
                 elif "empresa" in texto_limpio_linea_low and "2788" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "2788"
+                elif "empresa" in texto_limpio_linea_low and es_followers:
+                    panel_destino = "principal"; codigo = "2808"  # NUEVO: Instagram Followers Empresa
                 elif "empresa" in texto_limpio_linea_low:
                     panel_destino = "principal"; codigo = "2754"
                 elif "cch" in texto_limpio_linea_low:
@@ -264,7 +266,7 @@ if btn_procesar:
                         panel_destino = "principal"; codigo = "2450"
 
             # PRIORIDAD ABSOLUTA MANUAL GENERALIZADA (Si hay un código escrito, se respeta a rajatabla)
-            if codigo_manual and not (red_social == "instagram" and panel_destino == "principal" and codigo_manual in ["2744","2745","2754","2788"]):
+            if codigo_manual and not (red_social == "instagram" and panel_destino == "principal" and codigo_manual in ["2744","2745","2754","2788","2808"]):
                 codigo = codigo_manual
                 if es_jap_keyword or "jap" in linea_low:
                     panel_destino = "jap"
