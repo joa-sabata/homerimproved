@@ -243,7 +243,7 @@ if btn_procesar:
                 
                 # Casos mixtos
                 elif es_repost:
-                    panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "2257"
+                    panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "1398"
                 elif es_shares:
                     if es_jap_keyword or codigo_manual:
                         panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "9590"
