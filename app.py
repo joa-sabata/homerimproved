@@ -199,11 +199,8 @@ if btn_procesar:
                 elif es_views:
                     panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "10020"
                 elif es_likes:
-                    if es_jap_keyword or codigo_manual:
-                        panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "7991"
-                    else:
-                        panel_destino = "principal"; codigo = "1023"
-
+                     panel_destino = "jap"; codigo = codigo_manual if codigo_manual else "10335"
+                  
             # --- FACEBOOK ---
             elif red_social == "facebook":
                 if "page" in texto_limpio_linea_low or "pagina" in texto_limpio_linea_low:
